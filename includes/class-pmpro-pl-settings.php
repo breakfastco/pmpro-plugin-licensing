@@ -75,6 +75,9 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			if ( isset( $_POST['pmpro_zip_attachments'] ) ) {
 				$attachment_ids = array_map( 'intval', (array) $_POST['pmpro_zip_attachments'] );
 				update_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files', $attachment_ids );
+			} else {
+				// User erased all downloads from this level.
+				delete_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files' );
 			}
 		}
 
