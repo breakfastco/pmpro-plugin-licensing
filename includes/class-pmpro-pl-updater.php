@@ -89,7 +89,7 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 			$api->sections['installation'] = 'Installation';
 			$api->sections['faq']          = 'FAQ';
 			$api->sections['changelog']    = 'Changelog';
-			//$api->requires              = '';
+			// $api->requires              = '';
 
 			$license_key = pmpro_plugin_licensing_get_license_key();
 			if ( ! empty( $license_key ) && ! empty( $api->download_link ) ) {

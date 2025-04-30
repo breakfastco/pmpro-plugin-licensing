@@ -10,7 +10,7 @@ defined( 'ABSPATH' ) || exit;
 
 if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 	/**
-	 * Class PMPRO_Plugin_Licensing_Settings
+	 * Class PMPRO_PL_Settings
 	 *
 	 * @since 0.1.0
 	 */
@@ -97,7 +97,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 		</div>
 		<div class="wrap pmpro_admin pmpro_admin-pmpro-membershiplevels">
 		<form action="" method="post" enctype="multipart/form-data">
-		<?php wp_nonce_field( 'save_pl_settings', 'pmpro_pl_settings_nonce'); ?>
+			<?php wp_nonce_field( 'save_pl_settings', 'pmpro_pl_settings_nonce' ); ?>
 		<hr class="wp-header-end">
 		<h1>Settings</h1>
 		<div id="" class="pmpro_section" data-visibility="shown" data-activated="true">
