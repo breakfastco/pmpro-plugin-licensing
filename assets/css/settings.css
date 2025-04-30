@@ -1,4 +1,15 @@
+/**
+ * This style sheet is enqueued on our settings page at Memberships > Plugin
+ * Licensing and while editing a Membership level at Memberships > Settings >
+ * Levels.
+ */
+
+/* Core table styles affect nested tables. Undo some of that. */
+.form-table table th {
+	padding: 8px 10px;
+}
 @media screen and (max-width: 768px) {
+	/* Settings page banner. */
 	.pmpro_banner .pmpro_banner_wrapper img.pmpro-pl-icon{
 		float: left;
 		margin-right: .5em;

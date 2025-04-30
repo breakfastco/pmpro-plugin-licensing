@@ -79,6 +79,9 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			if ( ! is_array( $attachment_ids ) ) {
 				$attachment_ids = array();
 			}
+
+			wp_enqueue_style( 'pmpro-pl-settings' );
+
 			?>
 			<table class="form-table">
 				<tbody>
@@ -86,22 +89,43 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 						<th scope="row" valign="top">
 							<label>Files</label></th>
 						<td>
-							<div id="pmpro-zip-attachments">
-								<ul id="pmpro-zip-attachments-list">
-									<?php
-									foreach ( $attachment_ids as $aid ) :
-										$file = get_post( $aid );
-										?>
-										<li data-id="<?php echo esc_attr( $aid ); ?>">
-											<a href="<?php echo esc_url( wp_get_attachment_url( $aid ) ); ?>"><?php echo esc_html( basename( $file->guid ) ); ?></a>
+
+							<table id="pmpro-zip-attachments-list" class="wp-list-table widefat fixed striped table-view-list">
+								<thead>
+									<tr>
+										<th scope="row" valign="top"><label><?php esc_html_e('ID', 'pmpro-plugin-licensing' );?></label></th>
+										<th scope="row" valign="top"><label><?php esc_html_e('File', 'pmpro-plugin-licensing' );?></label></th>
+										<th>Edit</th>
+										<th>Remove</th>
+									</tr>
+								</thead>
+								<tbody>
+							<?php
+						foreach ( $attachment_ids as $aid ) :
+							$file = get_post( $aid );
+							?>
+									<tr data-id="<?php echo esc_attr( $aid ); ?>">
+										<td><p class="description"><?php echo esc_html( $aid ); ?></p></td>
+										<td><a href="<?php echo esc_url( wp_get_attachment_url( $aid ) ); ?>"><b><?php echo esc_html( basename( $file->guid ) ); ?></b></a></td>
+										<td>
+											<?php // Edit link. ?>
 											<a href="<?php echo esc_url( get_edit_post_link( $aid ) ); ?>" target="_blank"><?php esc_html_e( 'Edit', 'pmpro-plugin-licensing' ); ?></a>
+										</td>
+										<td>
+											<?php // Remove button. ?>
 											<button type="button" class="button remove-zip-attachment">Remove</button>
 											<input type="hidden" name="pmpro_zip_attachments[]" value="<?php echo esc_attr( $aid ); ?>">
-										</li>
-									<?php endforeach; ?>
-								</ul>
-								<button type="button" class="button" id="add-zip-attachment">Add File</button>
-							</div>
+										</td>
+									</tr>
+								<?php
+							endforeach;
+							?>
+								</tbody>
+							</table>
+
+						<?php do_action( 'pmpro_pl_after_settings' ); ?>
+
+							<p><button type="button" class="button" id="add-zip-attachment">Add File</button></p>
 						</td>
 					</tr>
 				</tbody>
@@ -131,13 +155,18 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 					// When a file is selected, run a callback.
 					file_frame.on('select', function() {
 						var attachment = file_frame.state().get('selection').first().toJSON();
-						var listItem = '<li data-id="' + attachment.id + '">' +
-							attachment.title +
-							' (<a href="' + attachment.url + '" target="_blank">View</a>) ' +
-							'<button type="button" class="button remove-zip-attachment">Remove</button>' +
-							'<input type="hidden" name="pmpro_zip_attachments[]" value="' + attachment.id + '">' +
-							'</li>';
-						$('#pmpro-zip-attachments-list').append(listItem);
+						var tableRow = '<tr data-id="' + attachment.id + '">'
+							+ '<td><p class="description">' + attachment.id + '</p></td>'
+							+ '<td><a href="' + attachment.url + '"><b>' + attachment.filename + '</b></a></td>'
+							+ '<td>'
+							+ '<a href="' + attachment.editLink + '" target="_blank">Edit</a>'
+							+ '</td>'
+							+ '<td>'
+							+ '<button type="button" class="button remove-zip-attachment">Remove</button>'
+							+ '<input type="hidden" name="pmpro_zip_attachments[]" value="' + attachment.id + '">'
+							+ '</td>'
+							+ '</tr>';
+						$('#pmpro-zip-attachments-list tbody').append(tableRow);
 					});
 
 					// Finally, open the modal
@@ -145,7 +174,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 				});
 
 				$('#pmpro-zip-attachments-list').on('click', '.remove-zip-attachment', function(){
-					$(this).closest('li').remove();
+					$(this).closest('tr').remove();
 				});
 			});
 			</script>
