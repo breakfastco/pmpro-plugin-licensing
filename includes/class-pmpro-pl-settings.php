@@ -39,6 +39,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			add_action( 'pmpro_save_membership_level', array( $this, 'membership_level_save_files' ), 10, 1 );
 			// Add a file upload UI in the level edit screen.
 			add_action( 'pmpro_membership_level_after_other_settings', array( $this, 'membership_level_add_files_controls' ), 10, 1 );
+			// Change the upload path for files uploaded to Membership levels.
+			add_filter( 'upload_dir', array( $this, 'maybe_change_upload_path' ), 99 );
 		}
 
 		public function add_submenu() {
@@ -50,6 +52,16 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 				'pmpro_plugin_licensing', // menu slug.
 				array( $this, 'settings_page' ) // function to call.
 			);
+		}
+
+		public function maybe_change_upload_path( $uploads ) {
+			if ( ! isset( $_POST['is_pmpro_pl'] ) ) {
+				return $uploads;
+			}
+
+			$uploads['path'] .= '/pmpro-plugin-licensing';
+			$uploads['url']  .= '/pmpro-plugin-licensing';
+			return $uploads;
 		}
 
 		/**
@@ -146,11 +158,17 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 					// Create the media frame.
 					file_frame = wp.media({
 						title: 'Select or Upload a .zip file',
+						library: {
+							type: 'application/zip',
+						},
 						button: {
 							text: 'Attach this file'
 						},
+						frame: 'select',
 						multiple: true
 					});
+					// Identify as uploaded with Plugin Licensing.
+					file_frame.uploader.options.uploader.params.is_pmpro_pl = true;
 
 					// When a file is selected, run a callback.
 					file_frame.on('select', function() {
