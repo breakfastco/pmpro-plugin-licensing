@@ -23,40 +23,22 @@ if ( ! defined( 'PMPRO_PLUGIN_LICENSING_PATH' ) ) {
 	define( 'PMPRO_PLUGIN_LICENSING_PATH', __FILE__ );
 }
 
-add_action( 'plugins_loaded', 'pmpro_plugin_licensing_init' );
-if ( ! function_exists( 'pmpro_plugin_licensing_init' ) ) {
-	/**
-	 * pmpro_plugin_licensing_init
-	 *
-	 * @return void
-	 */
-	function pmpro_plugin_licensing_init() {
-		require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-membership-features.php';
-		require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-rest-api.php';
-		// Manage this plugin's settings and provide UI controls.
-		require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-settings.php';
-		require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-updater.php';
+// Load our updater so users see pending updates for this plugin.
+require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-updater.php';
+$updater = PMPRO_PL_Updater::get_instance();
+$updater->set_plugin_slug( 'pmpro-plugin-licensing/pmpro-plugin-licensing.php' );
+$updater->set_plugin_version( PMPRO_PLUGIN_LICENSING_VERISON );
+$updater->set_store_url( 'https://breakfastco.xyz' );
+$updater->add_hooks();
 
-		// Load our updater so users see pending updates for this plugin.
-		$updater = PMPRO_PL_Updater::get_instance();
-		$updater->set_plugin_slug( 'pmpro-plugin-licensing/pmpro-plugin-licensing.php' );
-		$updater->set_plugin_version( PMPRO_PLUGIN_LICENSING_VERISON );
-		$updater->set_store_url( 'https://breakfastco.xyz' );
-		$updater->add_hooks();
+// Manage this plugin's settings and provide UI controls.
+require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-settings.php';
 
-		// Is Paid Memberships Pro active?
-		if ( ! class_exists( 'PMPRO_VERSION' ) ) {
-			// No.
-			return;
-		}
+// Load the membership features, generate and store license keys.
+require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-membership-features.php';
 
-		// Load the membership features, generate and store license keys.
-		PMPRO_PL_Membership_Features::get_instance();
-
-		// Load the REST API endpoints to which sold plugins will connect from customer sites.
-		PMPRO_PL_REST_API::get_instance();
-	}
-}
+// Load the REST API endpoints to which sold plugins will connect from customer sites.
+require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-rest-api.php';
 
 function pmpro_plugin_licensing_license_is_valid( $license_key ) {
 	// TODO custom database query? Looking at user for the key, and then subscriptions to membership levels.
