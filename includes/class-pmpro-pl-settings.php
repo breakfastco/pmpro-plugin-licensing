@@ -167,9 +167,22 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			);
 		}
 
+		/**
+		 * Save the settings.
+		 *
+		 * @return void
+		 */
+		public function save_settings() {
+			$license_key = isset( $_POST['pmpro_plugin_licensing_license_key'] ) ? sanitize_text_field( $_POST['pmpro_plugin_licensing_license_key'] ) : '';
+			update_option( pmpro_plugin_licensing_get_license_key_option_name(), $license_key );
+		}
+
 		public function settings_page() {
+			if ( ! defined( 'PMPRO_VERSION' ) ) {
+				wp_die( esc_html__( 'Paid Memberships Pro is not active.', 'pmpro-plugin-licensing' ) );
+			}
 			// Check nonce for saving settings.
-			if ( ! empty( $_POST['pmpro_plugin_licensing_save'] ) && ( empty($_POST['pmpro_pl_settings_nonce'] ) || ! check_admin_referer( 'save_pl_settings', 'pmpro_pl_settings_nonce' ) ) ) {
+			if ( ! empty( $_POST['pmpro_plugin_licensing_save'] ) && ( empty( $_POST['pmpro_pl_settings_nonce'] ) || ! check_admin_referer( 'save_pl_settings', 'pmpro_pl_settings_nonce' ) ) ) {
 				wp_die( esc_html__( 'Please try again.', 'pmpro-plugin-licensing' ) );
 			}
 
@@ -230,17 +243,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			</div> <!-- end pmpro_section_inside -->
 		</div> <!-- end pmpro_section -->
 	</form>
-		</div><?php
-		}
-
-		/**
-		 * Save the settings.
-		 *
-		 * @return void
-		 */
-		public function save_settings() {
-			$license_key = isset( $_POST['pmpro_plugin_licensing_license_key'] ) ? sanitize_text_field( $_POST['pmpro_plugin_licensing_license_key'] ) : '';
-			update_option( pmpro_plugin_licensing_get_license_key_option_name(), $license_key );
+		</div>
+			<?php
 		}
 	}
 	new PMPRO_PL_Settings();
