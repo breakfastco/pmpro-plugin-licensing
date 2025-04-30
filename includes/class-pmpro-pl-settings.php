@@ -104,7 +104,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 						<th scope="row" valign="top">
 							<label>Files</label></th>
 						<td>
-
+							<p class="submit"><button type="button" class="button" id="add-zip-attachment">Add File</button></p>
 							<table id="pmpro-zip-attachments-list" class="wp-list-table widefat fixed striped table-view-list">
 								<thead>
 									<tr>
@@ -140,7 +140,6 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 
 						<?php do_action( 'pmpro_pl_after_settings' ); ?>
 
-							<p><button type="button" class="button" id="add-zip-attachment">Add File</button></p>
 						</td>
 					</tr>
 				</tbody>
