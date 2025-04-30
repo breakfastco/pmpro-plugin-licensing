@@ -32,11 +32,16 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			}
 
 			// Add a tab to the PMPro settings page.
-			add_action( 'admin_menu', array( $this, 'add_settings_tab' ) );
+			add_action( 'admin_menu', array( $this, 'add_submenu' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'register_scripts' ) );
+
+			// Save meta when membership level settings are saved.
+			add_action( 'pmpro_save_membership_level', array( $this, 'membership_level_save_files' ), 10, 1 );
+			// Add a file upload UI in the level edit screen.
+			add_action( 'pmpro_membership_level_after_other_settings', array( $this, 'membership_level_add_files_controls' ), 10, 1 );
 		}
 
-		public function add_settings_tab() {
+		public function add_submenu() {
 			add_submenu_page(
 				'pmpro-dashboard', // parent slug.
 				__( 'Plugin Licensing', 'pmpro-plugin-licensing' ), // page title.
@@ -45,6 +50,106 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 				'pmpro_plugin_licensing', // menu slug.
 				array( $this, 'settings_page' ) // function to call.
 			);
+		}
+
+		/**
+		 * Saves list of files in meta when membership levels are saved.
+		 *
+		 * @param  int $level_id
+		 * @return void
+		 */
+		public function membership_level_save_files( $level_id ) {
+			// TODO does this need a nonce check?
+			if ( isset( $_POST['pmpro_zip_attachments'] ) ) {
+				$attachment_ids = array_map( 'intval', (array) $_POST['pmpro_zip_attachments'] );
+				update_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files', $attachment_ids );
+			}
+		}
+
+		/**
+		 * Adds controls while editing a Membership level to add and remove .zip
+		 * files.
+		 *
+		 * @param  mixed $level
+		 * @return void
+		 */
+		public function membership_level_add_files_controls( $level ) {
+			$level_id       = $level->id;
+			$attachment_ids = get_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files', true );
+			if ( ! is_array( $attachment_ids ) ) {
+				$attachment_ids = array();
+			}
+			?>
+			<table class="form-table">
+				<tbody>
+					<tr>
+						<th scope="row" valign="top">
+							<label>Files</label></th>
+						<td>
+							<div id="pmpro-zip-attachments">
+								<ul id="pmpro-zip-attachments-list">
+									<?php
+									foreach ( $attachment_ids as $aid ) :
+										$file = get_post( $aid );
+										?>
+										<li data-id="<?php echo esc_attr( $aid ); ?>">
+											<a href="<?php echo esc_url( wp_get_attachment_url( $aid ) ); ?>"><?php echo esc_html( basename( $file->guid ) ); ?></a>
+											<a href="<?php echo esc_url( get_edit_post_link( $aid ) ); ?>" target="_blank"><?php esc_html_e( 'Edit', 'pmpro-plugin-licensing' ); ?></a>
+											<button type="button" class="button remove-zip-attachment">Remove</button>
+											<input type="hidden" name="pmpro_zip_attachments[]" value="<?php echo esc_attr( $aid ); ?>">
+										</li>
+									<?php endforeach; ?>
+								</ul>
+								<button type="button" class="button" id="add-zip-attachment">Add File</button>
+							</div>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<script>
+			jQuery(document).ready(function($){
+				var file_frame;
+
+				$('#add-zip-attachment').on('click', function(e) {
+					e.preventDefault();
+
+					// If the media frame already exists, reopen it.
+					if (file_frame) {
+						file_frame.open();
+						return;
+					}
+
+					// Create the media frame.
+					file_frame = wp.media({
+						title: 'Select or Upload a .zip file',
+						button: {
+							text: 'Attach this file'
+						},
+						multiple: true
+					});
+
+					// When a file is selected, run a callback.
+					file_frame.on('select', function() {
+						var attachment = file_frame.state().get('selection').first().toJSON();
+						var listItem = '<li data-id="' + attachment.id + '">' +
+							attachment.title +
+							' (<a href="' + attachment.url + '" target="_blank">View</a>) ' +
+							'<button type="button" class="button remove-zip-attachment">Remove</button>' +
+							'<input type="hidden" name="pmpro_zip_attachments[]" value="' + attachment.id + '">' +
+							'</li>';
+						$('#pmpro-zip-attachments-list').append(listItem);
+					});
+
+					// Finally, open the modal
+					file_frame.open();
+				});
+
+				$('#pmpro-zip-attachments-list').on('click', '.remove-zip-attachment', function(){
+					$(this).closest('li').remove();
+				});
+			});
+			</script>
+			<?php
 		}
 
 		/**
