@@ -1,0 +1,4 @@
+/* Add some space between Subscription/Next payment on and our Downloads table. */
+table.pmpro-pl-downloads{
+	margin-top: 2em;
+}
