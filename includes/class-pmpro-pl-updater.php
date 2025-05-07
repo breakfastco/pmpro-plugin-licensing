@@ -81,7 +81,7 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 			$api->author                   = __( 'Breakfast', 'pmpro-plugin-licensing' );
 			$api->author_profile           = 'https://breakfastco.xyz';
 			$api->tested                   = ''; // This is the version available, not the current version.
-			$api->last_updated             = 'Recently';
+			$api->last_updated             = 'Recently'; // This says "55 years ago".
 			$api->homepage                 = 'https://breakfastco.xyz';
 			$api->download_link            = 'https://breakfastco.xyz/downloads/downloads/downloads/pmpro-plugin-licensing.zip';
 			$api->package                  = 'https://breakfastco.xyz/downloads/downloads/downloads/pmpro-plugin-licensing.zip';
@@ -98,9 +98,11 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 			if ( ! empty( $license_key ) && ! empty( $api->package ) ) {
 				$api->package = add_query_arg( 'key', $license_key, $api->package );
 			}
-			if ( empty( $api->upgrade_notice ) && ! pmpro_plugin_licensing_license_is_valid( $license_key ) ) {
-				$api->upgrade_notice = __( 'Important: This plugin requires a valid license key to update.', 'pmpro-plugin-licensing' );
-			}
+
+			// TODO implement license validity check against breakfastco.xyz.
+			// if ( empty( $api->upgrade_notice ) && ! pmpro_plugin_licensing_license_is_valid( $license_key ) ) {
+			// 	$api->upgrade_notice = __( 'Important: This plugin requires a valid license key to update.', 'pmpro-plugin-licensing' );
+			// }
 
 			return $api;
 		}

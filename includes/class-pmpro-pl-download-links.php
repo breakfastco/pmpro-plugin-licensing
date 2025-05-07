@@ -50,20 +50,36 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 		}
 
 		public function deliver_file_download() {
-			$file_name = get_query_var( $this->query_var() );
-			if ( empty( $file_name ) ) {
-				//global $wp_query;
+			$hash = get_query_var( $this->query_var() );
+			if ( empty( $hash ) ) {
 				return;
 			}
 
+			// Use the hash to find the attachment ID.
+			global $wpdb;
+			$attachment_id = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT post_id FROM `{$wpdb->prefix}postmeta` WHERE meta_value = %s and meta_key = '_pmpro_pl_hash' LIMIT 1",
+					$hash
+				)
+			);
+
+			if ( empty( $attachment_id ) ) {
+				wp_safe_redirect( site_url( '404.php' ) );
+				exit;
+			}
+
+			// Get the file path from the attachment ID.
+			$file_path = get_attached_file( $attachment_id );
+
 			// Does the file exist?
-			$file_path = PMPRO_PL_Settings::upload_path() . '/' . $file_name;
 			if ( ! file_exists( $file_path ) ) {
 				wp_safe_redirect( site_url( '404.php' ) );
 				exit;
 			}
 
 			// Is this user logged-in?
+			$file_name = basename( $file_path );
 			if ( ! is_user_logged_in() ) {
 				// No. Redirect to login page with the file as a referrer.
 				wp_safe_redirect( wp_login_url( site_url( $this->url_path() . $file_name ) ) );
@@ -71,8 +87,7 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 			}
 
 			// Is the file part of a membership level? That this user has?
-			$user          = wp_get_current_user();
-			$attachment_id = $this->find_attachment_id( $file_name );
+			$user = wp_get_current_user();
 			if ( empty( $attachment_id ) ) {
 				// Cannot find an attachment ID for this file name.
 				wp_safe_redirect( site_url( '404.php' ) );
@@ -97,16 +112,6 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 			exit;
 		}
 
-		protected function find_attachment_id( $file_name ) {
-			global $wpdb;
-			return (int) $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT ID FROM $wpdb->posts WHERE guid LIKE %s AND post_type = 'attachment' LIMIT 1",
-					'%' . $wpdb->esc_like( '/' . $file_name )
-				)
-			);
-		}
-
 		public function add_rewrite_rules() {
 			// Pattern for "more-notification-types-v1.0.2.zip".
 			add_rewrite_rule( $this->url_path() . '([a-zA-Z0-9\._\-]+)$', 'index.php?' . $this->query_var() . '=$matches[1]', 'top' );
@@ -124,16 +129,18 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 		 * @return string The download link.
 		 */
 		public static function create_download_link( $file ) {
+			if ( ! isset( $file->ID ) ) {
+				return '';
+			}
 			/**
 			 * Requirements are
 			 * - does not work for logged out users
 			 * - does not indicate the files actual URL
 			 */
 
-			// https://breakfastco.test/membership-account/download/more-notification-types-v1.0.2.zip
-			// https://breakfastco.xyz/membership-account/download/more-notification-types-v1.0.2.zip
-			// https://breakfastco.xyz/membership-account/download/more-notification-types-v1.0.2.zip?hash=9234f4y9hf43fhgq34fh39f4h4
-			return site_url( 'membership-account/download/' . basename( get_the_guid( $file ) ) );
+			// https://breakfastco.xyz/membership-account/download/9c43f2e5857b1032374052dbfb8357b6
+			$hash = get_post_meta( $file->ID, '_pmpro_pl_hash', true );
+			return site_url( 'membership-account/download/' . $hash );
 		}
 	}
 	new PMPRO_PL_Download_Links();

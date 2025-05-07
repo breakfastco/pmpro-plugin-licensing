@@ -37,6 +37,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 
 			// Save meta when membership level settings are saved.
 			add_action( 'pmpro_save_membership_level', array( $this, 'membership_level_save_files' ), 10, 1 );
+			// Extract changelogs and other text from readme.txt files in uploaded .zips.
+			add_action( 'pmpro_save_membership_level', array( $this, 'extract_readme_data_during_uploads' ), 10, 1, );
 			// Add a file upload UI in the level edit screen.
 			add_action( 'pmpro_membership_level_after_other_settings', array( $this, 'membership_level_add_files_controls' ), 10, 1 );
 			// Change the upload path for files uploaded to Membership levels.
@@ -54,11 +56,128 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			);
 		}
 
-		public static function upload_path( $uploads = null ) {
-			if ( null === $uploads ) {
-				$uploads = wp_upload_dir();
+		public function extract_readme_data_during_uploads( $level_id ) {
+			if ( ! isset( $_POST['plugin_licensing_files'] ) ) {
+				return;
 			}
-			return $uploads['path'] .= '/pmpro-plugin-licensing';
+			$attachment_ids = array_map( 'intval', (array) $_POST['plugin_licensing_files'] );
+			foreach ( $attachment_ids as $post_id ) {
+
+				// Is it a zip file?
+				$mime_type = get_post_mime_type( $post_id );
+				if ( 'application/zip' !== $mime_type ) {
+					// No.
+					return;
+				}
+
+				// Unzip the file, read the plugin info, and then delete the unzipped data.
+				if ( ! class_exists( 'WP_Filesystem' ) ) {
+					require_once ABSPATH . '/wp-admin/includes/file.php';
+				}
+
+				global $wp_filesystem;
+				if ( ! $wp_filesystem ) {
+					WP_Filesystem();
+				}
+
+				$file_path = get_attached_file( $post_id );
+				// File could not exist.
+				$result = unzip_file( $file_path, dirname( $file_path ) . '/temp' );
+				if ( is_wp_error( $result ) ) {
+					continue;
+				}
+				$temp_plugins = $this->get_temp_plugins( dirname( $file_path ) . '/temp/' );
+
+				/**
+				 * There is only one, but use a loop because we do not know what
+				 * the array key is.
+				 */
+				foreach( $temp_plugins as $plugin_basename => $plugin_data ) {
+
+					// Save this plugin's version number in the attachment post meta.
+					if ( ! empty( $plugin_data['Version'] ) ) {
+						update_post_meta( $post_id, '_pmpro_pl_version', $plugin_data['Version'] );
+					}
+
+					// Generate a hash checksum for this attachment that can represent it in URLs.
+					update_post_meta( $post_id, '_pmpro_pl_hash', md5( wp_json_encode( $plugin_data ) ) );
+
+					/**
+					 * Need to readme.txt data so the REST API can it available
+					 * to customer sites. Stash the description, installation
+					 * instructions, FAQ, and changelog in attachment post meta.
+					 */
+					$parser = new PMPRO_PL_Readme_Parser( dirname( $file_path ) . '/temp/' . dirname( $plugin_basename ) . '/readme.txt' );
+					update_post_meta( $post_id, '_pmpro_pl_description', $parser->sections['description'] ?? '' );
+					update_post_meta( $post_id, '_pmpro_pl_installation', $parser->sections['installation'] ?? '' );
+					update_post_meta( $post_id, '_pmpro_pl_faq', $parser->sections['faq'] ?? '' );
+					update_post_meta( $post_id, '_pmpro_pl_changelog', $parser->sections['changelog'] ?? '' );
+				}
+
+				// Delete the temp folder.
+				$wp_filesystem->rmdir( dirname( $file_path ) . '/temp', true );
+			}
+		}
+
+		/**
+		 * This is like core WordPress' get_plugins() but it works on any path
+		 * given. Used to extract info from a plugin unzipped to a temp folder.
+		 *
+		 * @param  string $plugin_root File path where plugins should be found.
+		 * @return array
+		 */
+		protected function get_temp_plugins( $plugin_root ) {
+			$plugins_dir = @opendir( $plugin_root );
+			if ( $plugins_dir ) {
+				while ( ( $file = readdir( $plugins_dir ) ) !== false ) {
+					if ( str_starts_with( $file, '.' ) ) {
+						continue;
+					}
+
+					if ( is_dir( $plugin_root . '/' . $file ) ) {
+						$plugins_subdir = @opendir( $plugin_root . '/' . $file );
+
+						if ( $plugins_subdir ) {
+							while ( ( $subfile = readdir( $plugins_subdir ) ) !== false ) {
+								if ( str_starts_with( $subfile, '.' ) ) {
+									continue;
+								}
+
+								if ( str_ends_with( $subfile, '.php' ) ) {
+									$plugin_files[] = "$file/$subfile";
+								}
+							}
+
+							closedir( $plugins_subdir );
+						}
+					} elseif ( str_ends_with( $file, '.php' ) ) {
+						$plugin_files[] = $file;
+					}
+				}
+
+				closedir( $plugins_dir );
+			}
+
+			if ( empty( $plugin_files ) ) {
+				return array();
+			}
+
+			$wp_plugins = array();
+			foreach ( $plugin_files as $plugin_file ) {
+				if ( ! is_readable( "$plugin_root/$plugin_file" ) ) {
+					continue;
+				}
+
+				// Do not apply markup/translate as it will be cached.
+				$plugin_data = get_plugin_data( "$plugin_root/$plugin_file", false, false );
+
+				if ( empty( $plugin_data['Name'] ) ) {
+					continue;
+				}
+
+				$wp_plugins[ plugin_basename( $plugin_file ) ] = $plugin_data;
+			}
+			return $wp_plugins;
 		}
 
 		public function maybe_change_upload_path( $uploads ) {
@@ -131,7 +250,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 										<td><a href="<?php echo esc_url( wp_get_attachment_url( $aid ) ); ?>"><b><?php echo esc_html( basename( $file->guid ) ); ?></b></a></td>
 										<td>
 											<?php // Edit link. ?>
-											<a href="<?php echo esc_url( get_edit_post_link( $aid ) ); ?>" target="_blank"><?php esc_html_e( 'Edit', 'pmpro-plugin-licensing' ); ?></a>
+											<a href="<?php echo esc_url( get_edit_post_link( $aid ) ?? '' ); ?>" target="_blank"><?php esc_html_e( 'Edit', 'pmpro-plugin-licensing' ); ?></a>
 										</td>
 										<td>
 											<?php // Remove button. ?>
@@ -301,6 +420,13 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 	</form>
 		</div>
 			<?php
+		}
+
+		public static function upload_path( $uploads = null ) {
+			if ( null === $uploads ) {
+				$uploads = wp_upload_dir();
+			}
+			return $uploads['path'] .= '/pmpro-plugin-licensing';
 		}
 	}
 	new PMPRO_PL_Settings();

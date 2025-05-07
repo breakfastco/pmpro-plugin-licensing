@@ -43,6 +43,8 @@ require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-
 // Create download links and deliver file downloads to customers.
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-download-links.php';
 
+require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-readme-parser.php';
+
 function pmpro_pl_customer_license_is_valid( $args ) {
 	$license_key   = $args['license_key'] ?? '';
 	$user_id       = $args['user_id'] ?? 0;
