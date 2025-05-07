@@ -54,13 +54,20 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			);
 		}
 
+		public static function upload_path( $uploads = null ) {
+			if ( null === $uploads ) {
+				$uploads = wp_upload_dir();
+			}
+			return $uploads['path'] .= '/pmpro-plugin-licensing';
+		}
+
 		public function maybe_change_upload_path( $uploads ) {
 			if ( ! isset( $_POST['is_pmpro_pl'] ) ) {
 				return $uploads;
 			}
 
-			$uploads['path'] .= '/pmpro-plugin-licensing';
-			$uploads['url']  .= '/pmpro-plugin-licensing';
+			$uploads['path'] = self::upload_path( $uploads );
+			$uploads['url'] .= '/pmpro-plugin-licensing';
 			return $uploads;
 		}
 

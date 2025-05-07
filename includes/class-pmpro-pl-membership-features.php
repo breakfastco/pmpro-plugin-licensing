@@ -74,24 +74,6 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			}
 		}
 
-		/**
-		 * Creates a download link for the file.
-		 *
-		 * @param WP_Post $file The file to create a download link for.
-		 * @return string The download link.
-		 */
-		protected function create_download_link( $file ) {
-			/**
-			 * Requirements are
-			 * - does not work for logged out users
-			 * - does not indicate the files actual URL
-			 */
-
-			// https://breakfastco.xyz/membership-account/download/more-notification-types-v1.0.2.zip
-			// https://breakfastco.xyz/membership-account/download/more-notification-types-v1.0.2.zip?hash=9234f4y9hf43fhgq34fh39f4h4
-			return site_url( 'membership-account/download/' . basename( get_the_guid( $file ) ) );
-		}
-
 		public function membership_account_register_scripts() {
 			$min = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
 			wp_register_style(
@@ -126,7 +108,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 						$file = get_post( $attachment_id );
 						?>
 						<tr>
-							<td><a href="<?php echo esc_url( $this->create_download_link( $file ) ); ?>" target="_blank"><?php echo esc_html( basename( $file->guid ) ); ?></a></td>
+							<td><a href="<?php echo esc_url( PMPRO_PL_Download_Links::create_download_link( $file ) ); ?>" target="_blank"><?php echo esc_html( basename( $file->guid ) ); ?></a></td>
 							<td>TODO version</td>
 						</tr>
 						<?php

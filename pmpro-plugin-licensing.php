@@ -40,22 +40,82 @@ require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-
 // Load the REST API endpoints to which sold plugins will connect from customer sites.
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-rest-api.php';
 
-function pmpro_plugin_licensing_license_is_valid( $license_key ) {
-	// TODO custom database query? Looking at user for the key, and then subscriptions to membership levels.
-	return true;
+// Create download links and deliver file downloads to customers.
+require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-download-links.php';
+
+function pmpro_pl_customer_license_is_valid( $args ) {
+	$license_key   = $args['license_key'] ?? '';
+	$user_id       = $args['user_id'] ?? 0;
+	$attachment_id = $args['attachment_id'] ?? 0;
+
+	if ( empty( $license_key ) && empty( $user_id ) ) {
+		// Not enough info.
+		return false;
+	}
+
+	if ( empty( $attachment_id ) ) {
+		return false;
+	}
+
+	global $wpdb;
+	$license_row = $wpdb->get_row(
+		$wpdb->prepare(
+			"SELECT user_id, meta_value FROM $wpdb->usermeta WHERE meta_key = 'pmpro_plugin_licensing_license_key' AND meta_value = %s LIMIT 1",
+			$license_key
+		)
+	);
+
+	if ( empty( $license_row ) ) {
+		return false;
+	}
+
+	// Get active memberships for this user.
+	if ( ! function_exists( 'pmpro_getMembershipLevelsForUser' ) ) {
+		return false;
+	}
+
+	$levels = pmpro_getMembershipLevelsForUser( $license_row->user_id );
+	if ( empty( $levels ) ) {
+		return false;
+	}
+
+	// Examine each of this user's memberships.
+	foreach ( $levels as $level ) {
+		// Is this membership expired?
+		if ( (int) $level->enddate < time() ) {
+			// Yes.
+			continue;
+		}
+
+		// Does this level contain the attachment?
+		$level_attachment_ids = get_pmpro_membership_level_meta( $level->id, 'plugin_licensing_files', true );
+		if ( empty( $level_attachment_ids ) ) {
+			continue;
+		}
+		if ( in_array( $attachment_id, $level_attachment_ids, true ) ) {
+			// Yes.
+			return true;
+		}
+	}
+
+	// This user has memberships, but none of them have this file attached.
+	return false;
 }
 
 function pmpro_plugin_licensing_get_license_key() {
+	/**
+	 * Your customers' license keys are stored in user meta. The key stored in
+	 * this option is issued by breakfastco.xyz when you buy this plugin.
+	 */
 	return get_option( pmpro_plugin_licensing_get_license_key_option_name() );
 }
 
 function pmpro_plugin_licensing_get_license_key_option_name() {
 	/**
-	 * For plugin_slug pmpro-plugin-licensing/pmpro-plugin-licensing.php,
-	 * we want
-	 * pmpro_plugin_licensing__{$slug} but without the file extension or slash.
-	 * so
-	 * pmpro_plugin_licensing__pmpro-plugin-licensing_pmpro-plugin-licensing
+	 * This plugin stores its license key from breakfastco.xyz
+	 * in an option so admins can buy their own products from
+	 * their own stores using the license key stored in
+	 * user meta.
 	 */
-	return 'pmpro_plugin_licensing__pmpro-plugin-licensing_pmpro-plugin-licensing';
+	return 'pmpro_plugin_licensing_license_key';
 }
