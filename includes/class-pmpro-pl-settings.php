@@ -72,8 +72,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 		 */
 		public function membership_level_save_files( $level_id ) {
 			// TODO does this need a nonce check?
-			if ( isset( $_POST['pmpro_zip_attachments'] ) ) {
-				$attachment_ids = array_map( 'intval', (array) $_POST['pmpro_zip_attachments'] );
+			if ( isset( $_POST['plugin_licensing_files'] ) ) {
+				$attachment_ids = array_map( 'intval', (array) $_POST['plugin_licensing_files'] );
 				update_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files', $attachment_ids );
 			} else {
 				// User erased all downloads from this level.
@@ -82,7 +82,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 		}
 
 		/**
-		 * Adds controls while editing a Membership level to add and remove .zip
+		 * Adds controls while editing a Membership level to add and remove
 		 * files.
 		 *
 		 * @param  mixed $level
@@ -104,8 +104,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 						<th scope="row" valign="top">
 							<label>Files</label></th>
 						<td>
-							<p class="submit"><button type="button" class="button" id="add-zip-attachment">Add File</button></p>
-							<table id="pmpro-zip-attachments-list" class="wp-list-table widefat fixed striped table-view-list">
+							<p class="submit"><button type="button" class="button" id="add-file-attachment">Add File</button></p>
+							<table id="pmpro-file-attachments-list" class="wp-list-table widefat fixed striped table-view-list">
 								<thead>
 									<tr>
 										<th scope="row" valign="top"><label><?php esc_html_e('ID', 'pmpro-plugin-licensing' );?></label></th>
@@ -116,9 +116,9 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 								</thead>
 								<tbody>
 							<?php
-						foreach ( $attachment_ids as $aid ) :
-							$file = get_post( $aid );
-							?>
+							foreach ( $attachment_ids as $aid ) :
+								$file = get_post( $aid );
+								?>
 									<tr data-id="<?php echo esc_attr( $aid ); ?>">
 										<td><p class="description"><?php echo esc_html( $aid ); ?></p></td>
 										<td><a href="<?php echo esc_url( wp_get_attachment_url( $aid ) ); ?>"><b><?php echo esc_html( basename( $file->guid ) ); ?></b></a></td>
@@ -128,8 +128,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 										</td>
 										<td>
 											<?php // Remove button. ?>
-											<button type="button" class="button remove-zip-attachment">Remove</button>
-											<input type="hidden" name="pmpro_zip_attachments[]" value="<?php echo esc_attr( $aid ); ?>">
+											<button type="button" class="button remove-file-attachment">Remove</button>
+											<input type="hidden" name="plugin_licensing_files[]" value="<?php echo esc_attr( $aid ); ?>">
 										</td>
 									</tr>
 								<?php
@@ -148,7 +148,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			jQuery(document).ready(function($){
 				var file_frame;
 
-				$('#add-zip-attachment').on('click', function(e) {
+				$('#add-file-attachment').on('click', function(e) {
 					e.preventDefault();
 
 					// If the media frame already exists, reopen it.
@@ -182,18 +182,18 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 							+ '<a href="' + attachment.editLink + '" target="_blank">Edit</a>'
 							+ '</td>'
 							+ '<td>'
-							+ '<button type="button" class="button remove-zip-attachment">Remove</button>'
-							+ '<input type="hidden" name="pmpro_zip_attachments[]" value="' + attachment.id + '">'
+							+ '<button type="button" class="button remove-file-attachment">Remove</button>'
+							+ '<input type="hidden" name="plugin_licensing_files[]" value="' + attachment.id + '">'
 							+ '</td>'
 							+ '</tr>';
-						$('#pmpro-zip-attachments-list tbody').append(tableRow);
+						$('#pmpro-file-attachments-list tbody').append(tableRow);
 					});
 
 					// Finally, open the modal
 					file_frame.open();
 				});
 
-				$('#pmpro-zip-attachments-list').on('click', '.remove-zip-attachment', function(){
+				$('#pmpro-file-attachments-list').on('click', '.remove-file-attachment', function(){
 					$(this).closest('tr').remove();
 				});
 			});
