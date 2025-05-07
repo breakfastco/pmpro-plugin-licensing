@@ -112,11 +112,8 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 				return $transient;
 			}
 
-			// Create option name from plugin slug.
+			// License key could be empty, but we still want to show a pending update.
 			$license_key = pmpro_plugin_licensing_get_license_key();
-			if ( ! $license_key ) {
-				return $transient;
-			}
 
 			// Before the REST API endpoint exists, pretend there is always an update.
 			$plugin_slug                         = $this->get_plugin_slug();
