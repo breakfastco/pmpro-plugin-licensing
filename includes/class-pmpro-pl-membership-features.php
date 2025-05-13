@@ -109,7 +109,8 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 						?>
 						<tr>
 							<td><a href="<?php echo esc_url( PMPRO_PL_Download_Links::create_download_link( $file ) ); ?>" target="_blank"><?php echo esc_html( basename( $file->guid ) ); ?></a></td>
-							<td>TODO version</td>
+							<td><?php echo esc_html( get_post_meta( $attachment_id, '_pmpro_pl_version', true ) ); ?></td>
+							<td><a>5 sites</a></td>
 						</tr>
 						<?php
 					}
