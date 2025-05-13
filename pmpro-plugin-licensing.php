@@ -170,6 +170,11 @@ function pmpro_pl_customer_license_is_valid( $args ) {
 	return false;
 }
 
+/**
+ * Returns the saved license key for this plugin.
+ *
+ * @return string
+ */
 function pmpro_plugin_licensing_get_license_key() {
 	/**
 	 * Your customers' license keys are stored in user meta. The key stored in
@@ -178,6 +183,12 @@ function pmpro_plugin_licensing_get_license_key() {
 	return get_option( pmpro_plugin_licensing_get_license_key_option_name() );
 }
 
+/**
+ * Returns the name of the option that stores a license key for this plugin
+ * provided by breakfastco.xyz.
+ *
+ * @return string
+ */
 function pmpro_plugin_licensing_get_license_key_option_name() {
 	/**
 	 * This plugin stores its license key from breakfastco.xyz
