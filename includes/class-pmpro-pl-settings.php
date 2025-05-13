@@ -99,6 +99,11 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 						update_post_meta( $post_id, '_pmpro_pl_version', $plugin_data['Version'] );
 					}
 
+					// Save the slug.
+					if ( ! empty( $plugin_basename ) ) {
+						update_post_meta( $post_id, '_pmpro_pl_slug', $plugin_basename );
+					}
+
 					// Generate a hash checksum for this attachment that can represent it in URLs.
 					update_post_meta( $post_id, '_pmpro_pl_hash', md5( wp_json_encode( $plugin_data ) ) );
 
