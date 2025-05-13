@@ -45,6 +45,72 @@ require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-
 
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-readme-parser.php';
 
+// Flush rewrite rules when the plugin is activated.
+register_activation_hook( PMPRO_PLUGIN_LICENSING_PATH, 'pmpro_pl_flush_rewrite' );
+/**
+ * Flushes rewrite rules.
+ *
+ * @param  boolean $network_wide True if this plugin is being Network Activated or Network Deactivated by the multisite admin.
+ * @return void
+ */
+function pmpro_pl_flush_rewrite( $network_wide ) {
+	if ( ! is_multisite() || ! $network_wide ) {
+		flush_rewrite_rules();
+		return;
+	}
+
+	$sites = get_sites(
+		array(
+			'network' => 1,
+			'limit'   => apply_filters( 'pmpro_pl_query_limit', 1000, __METHOD__ ),
+		)
+	);
+	foreach ( $sites as $site ) {
+		switch_to_blog( $site->blog_id );
+		global $wp_rewrite;
+		$wp_rewrite->init(); // important...
+		$wp_rewrite->flush_rules();
+		restore_current_blog();
+	}
+}
+
+// Delete an option during deactivation.
+register_deactivation_hook( PMPRO_PLUGIN_LICENSING_PATH, 'pmpro_pl_delete_rewrite_rules_option' );
+/**
+ * Deletes the rewrite_rules option so the rewrite rules are generated
+ * on the next page load without ours. Called during deactivation.
+ *
+ * @see https://wordpress.stackexchange.com/a/44337/13090
+ *
+ * @param  bool $network_wide True if this plugin is being Network Activated or Network Deactivated by the multisite admin.
+ * @return void
+ */
+function pmpro_pl_delete_rewrite_rules_option( $network_wide ) {
+	if ( ! is_multisite() || ! $network_wide ) {
+		delete_option( 'rewrite_rules' );
+		return;
+	}
+
+	$sites = get_sites(
+		array(
+			'network' => 1,
+			'limit'   => apply_filters( 'pmpro_pl_query_limit', 1000, __METHOD__ ),
+		)
+	);
+	foreach ( $sites as $site ) {
+		switch_to_blog( $site->blog_id );
+		delete_option( 'rewrite_rules' );
+		restore_current_blog();
+	}
+}
+
+/**
+ * Determines whether a customer license key is valid for the file she is trying
+ * to download.
+ *
+ * @param  array $args Array with keys 'license_key', 'user_id', or 'attachment_id'. License key and attachment ID are required.
+ * @return bool
+ */
 function pmpro_pl_customer_license_is_valid( $args ) {
 	$license_key   = $args['license_key'] ?? '';
 	$user_id       = $args['user_id'] ?? 0;
