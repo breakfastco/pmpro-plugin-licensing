@@ -229,6 +229,22 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			wp_enqueue_style( 'pmpro-pl-settings' );
 
 			?>
+<style type="text/css">
+input.file-hash{
+	font-size: 11px;
+	font-family: monospace;
+	width: 21em;
+}
+.form-table th.file-id{
+	width: 30px;
+}
+.form-table th.file-hash{
+	width: 290px;
+}
+.form-table th.file-remove{
+	width: 60px;
+}
+</style>
 			<table class="form-table">
 				<tbody>
 					<tr>
@@ -239,10 +255,10 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 							<table id="pmpro-file-attachments-list" class="wp-list-table widefat fixed striped table-view-list">
 								<thead>
 									<tr>
-										<th scope="row" valign="top"><label><?php esc_html_e('ID', 'pmpro-plugin-licensing' );?></label></th>
+										<th scope="row" valign="top" class="file-id"><label><?php esc_html_e('ID', 'pmpro-plugin-licensing' );?></label></th>
 										<th scope="row" valign="top"><label><?php esc_html_e('File', 'pmpro-plugin-licensing' );?></label></th>
-										<th>Edit</th>
-										<th>Remove</th>
+										<th scope="row" valign="top" class="file-hash">Hash</th>
+										<th scope="row" valign="top" class="file-remove">Remove</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -254,8 +270,9 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 										<td><p class="description"><?php echo esc_html( $aid ); ?></p></td>
 										<td><a href="<?php echo esc_url( wp_get_attachment_url( $aid ) ); ?>"><b><?php echo esc_html( basename( $file->guid ) ); ?></b></a></td>
 										<td>
-											<?php // Edit link. ?>
-											<a href="<?php echo esc_url( get_edit_post_link( $aid ) ?? '' ); ?>" target="_blank"><?php esc_html_e( 'Edit', 'pmpro-plugin-licensing' ); ?></a>
+											<?php // Hash. ?>
+											<input type="text" readonly="readonly" class="file-hash" id="plugin_licensing_hash_<?php echo esc_attr( $aid ); ?>" value="<?php echo esc_attr( get_post_meta( $aid, '_pmpro_pl_hash', true ) ); ?>" />
+											<button type="button" class="button copy-hash" onclick="pmproPlCopyClipboard('plugin_licensing_hash_<?php echo esc_attr( $aid ); ?>');">Copy hash</button>
 										</td>
 										<td>
 											<?php // Remove button. ?>
@@ -328,6 +345,11 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 					$(this).closest('tr').remove();
 				});
 			});
+
+			function pmproPlCopyClipboard( elementID ) {
+				document.querySelector('#'+elementID).select();
+				document.execCommand('copy');
+			}
 			</script>
 			<?php
 		}
