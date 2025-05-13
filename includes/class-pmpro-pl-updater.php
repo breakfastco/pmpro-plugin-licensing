@@ -23,6 +23,13 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 		protected static $instance = null;
 
 		/**
+		 * 32 character string that uniquely identifies this file in its store.
+		 *
+		 * @var string
+		 */
+		protected $plugin_hash = '';
+
+		/**
 		 * The plugin slug.
 		 *
 		 * @var string
@@ -171,8 +178,18 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 			return $this->plugin_slug;
 		}
 
-		public function set_store_url( $store_url ) {
-			$this->store_url = $store_url;
+		/**
+		 * Creates a store URL where this plugin finds updates.
+		 *
+		 * @param  string $path A URL path to append to the store URL.
+		 * @return string
+		 */
+		public function get_store_url( $path ) {
+			return trailingslashit( $this->store_url ) . ltrim( $path, '/' );
+		}
+
+		public function set_plugin_hash( $plugin_hash ) {
+			$this->plugin_hash = $plugin_hash;
 		}
 
 		public function set_plugin_slug( $plugin_slug ) {
@@ -181,6 +198,10 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 
 		public function set_plugin_version( $plugin_version ) {
 			$this->plugin_version = $plugin_version;
+		}
+
+		public function set_store_url( $store_url ) {
+			$this->store_url = $store_url;
 		}
 	}
 }

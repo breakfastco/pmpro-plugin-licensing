@@ -26,7 +26,8 @@ if ( ! defined( 'PMPRO_PLUGIN_LICENSING_PATH' ) ) {
 // Load our updater so users see pending updates for this plugin.
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-updater.php';
 $updater = PMPRO_PL_Updater::get_instance();
-$updater->set_plugin_slug( 'pmpro-plugin-licensing/pmpro-plugin-licensing.php' );
+$updater->set_plugin_hash( '9c43f2e5857b1032374052dbfb8357b6' ); // Required for requests to the store for available updates.
+$updater->set_plugin_slug( 'pmpro-plugin-licensing/pmpro-plugin-licensing.php' ); // Required for WordPress updater display plugin updates.
 $updater->set_plugin_version( PMPRO_PLUGIN_LICENSING_VERISON );
 $updater->set_store_url( 'https://breakfastco.xyz' );
 $updater->add_hooks();
