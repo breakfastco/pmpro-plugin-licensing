@@ -69,9 +69,8 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				'/files',
 				array(
 					array(
-						'methods'             => WP_REST_Server::READABLE,
-						'callback'            => array( $this, 'file_handler' ),
-						//'permission_callback' => true, // Let logged out users use this route.
+						'methods'  => WP_REST_Server::READABLE,
+						'callback' => array( $this, 'file_handler' ),
 					),
 				)
 			);
