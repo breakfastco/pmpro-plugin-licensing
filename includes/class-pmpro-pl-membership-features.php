@@ -106,6 +106,11 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 				<tbody>
 					<?php
 					foreach ( $level_meta_files as $hash => $attachment_id ) {
+						// Is there a file attached to this hash?
+						if ( 0 === $attachment_id ) {
+							// No.
+							continue;
+						}
 						$file = get_post( $attachment_id );
 
 						// TODO active sites.
