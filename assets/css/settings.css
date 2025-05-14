@@ -28,3 +28,13 @@ input.file-hash{
 .form-table th.file-remove{
 	width: 60px;
 }
+.file-name{
+	display: flex;
+	align-items: baseline
+}
+.file-name a{
+	flex-grow: 1
+}
+.form-table #pmpro-file-attachments-list td{
+	margin-bottom: 0;
+}

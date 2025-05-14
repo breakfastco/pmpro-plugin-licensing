@@ -238,8 +238,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 		}
 
 		/**
-		 * Adds controls while editing a Membership level to add and remove
-		 * files.
+		 * Adds file controls while editing a Membership level.
 		 *
 		 * @param  mixed $level
 		 * @return void
@@ -267,8 +266,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 								<thead>
 									<tr>
 										<th scope="row" valign="top"><label><?php esc_html_e( 'File', 'pmpro-plugin-licensing' ); ?></label></th>
-										<th scope="row" valign="top" class="file-hash">Hash</th>
-										<th scope="row" valign="top" class="file-remove">Remove</th>
+										<th scope="row" valign="top" class="file-hash"><?php esc_html_e( 'Hash', 'pmpro-plugin-licensing' ); ?></th>
+										<th scope="row" valign="top" class="file-remove"><?php esc_html_e( 'Remove', 'pmpro-plugin-licensing' ); ?></th>
 									</tr>
 								</thead>
 								<tbody>
@@ -281,15 +280,18 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 											<?php
 											// Link to file or Attach button if there is no file.
 											if ( 0 !== $attachment_id ) {
+												// File name linked to download it.
+												// Button to replace the file with a new version.
 												printf(
-													'<a href="%s"><b>%s</b></a></td>',
+													'<a href="%s"><b>%s</b></a><button type="button" class="button">%s</button>',
 													esc_url( wp_get_attachment_url( $attachment_id ) ),
-													esc_html( basename( $file->guid ) )
+													esc_html( basename( $file->guid ) ),
+													esc_html__( 'Replace', 'pmpro-plugin-licensing' )
 												);
 											} else {
 												printf(
 													'<button type="button" class="button attach-file-to-row" data-hash="%s">%s</button>',
-													$hash,
+													esc_attr( $hash ),
 													esc_attr( __( 'Attach plugin .zip', 'pmpro-pl-licensing' ) )
 												);
 											}
