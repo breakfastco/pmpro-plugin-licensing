@@ -23,6 +23,20 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 
 		public function add_hooks() {
 			add_action( 'rest_api_init', array( $this, 'register_routes' ) );
+			add_action( 'init', array( $this, 'register_meta' ) );
+		}
+
+		public function register_meta() {
+			register_meta(
+				'post',
+				'pmpro_pl_hash',
+				array(
+					'object_subtype' => 'attachment',
+					'type'           => 'string',
+					'single'         => true,
+					'show_in_rest'   => true,
+				)
+			);
 		}
 
 		public function file_handler( $request ) {

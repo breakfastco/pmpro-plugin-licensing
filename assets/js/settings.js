@@ -19,11 +19,11 @@ jQuery(document).ready(function($){
 		$.post( pmpro_pl_settings.ajaxurl, hashData )
 			.done( function( response ) {
 				if ( response ) {
-					var tableRow = '<tr data-hash="' + response.data.hash + '">'
+					var tableRow = '<tr>'
 						+ '<td id="file_name_' + response.data.hash + '" class="file-name"><button type="button" class="button attach-file-to-row" data-hash="' + response.data.hash + '">Attach plugin .zip</button></td>'
 						+ '<td>'
 						+ '<input type="text" readonly="readonly" class="file-hash" id="plugin_licensing_hash_' + response.data.hash + '" value="' + response.data.hash + '" />'
-						+ '<button type="button" class="button copy-hash" onclick="pmproPlCopyClipboard(\'plugin_licensing_hash_' + response.data.hash + '">Copy hash</button>'
+						+ '\n<button type="button" class="button copy-hash" onclick="pmproPlCopyClipboard(\'plugin_licensing_hash_' + response.data.hash + '\');">Copy hash</button>'
 						+ '</td>'
 						+ '<td>'
 						+ '<button type="button" class="button remove-file-attachment">Remove</button>'
@@ -81,11 +81,26 @@ function pmproPlAddClickHanders() {
 		// When a file is selected, run a callback.
 		file_frame.on('select', function() {
 			var attachment = file_frame.state().get('selection').first().toJSON();
+			// Does this attachment already have a hash stored in post meta?
+			var post = new wp.api.models.Media( { id: attachment.id } );
+			post.fetch().done( function( result ) {
+				if( '' !== post.attributes.meta.pmpro_pl_hash ) {
+					// Yes. Tell the user we will adopt the previously created hash.
+					alert( 'The file you have chosen already has a hash. Perhaps one was generated while attaching this file to another Membership Level. We will use the existing hash and replace the hash in this file\'s row in the Files table.' );
+					// Replace throughout the table row.
+					jQuery('#file_name_' + hash).attr( 'id', 'file_name_' + post.attributes.meta.pmpro_pl_hash );
+					jQuery('.attach-file-to-row[data-hash="' + hash + '"]').attr( 'data-hash', post.attributes.meta.pmpro_pl_hash );
+					var hashInput = jQuery('#plugin_licensing_hash_' + hash);
+					hashInput.attr( 'value', post.attributes.meta.pmpro_pl_hash );
+					hashInput.attr( 'id', 'plugin_licensing_hash_' + post.attributes.meta.pmpro_pl_hash );
+					hashInput.siblings('button').attr( 'onclick', 'pmproPlCopyClipboard(\'plugin_licensing_hash_' + post.attributes.meta.pmpro_pl_hash + '\');' );
+					jQuery('input#plugin_licensing_file_' + hash).attr( 'name', 'plugin_licensing_files[' + post.attributes.meta.pmpro_pl_hash + ']' ).attr( 'id', 'plugin_licensing_file_' + post.attributes.meta.pmpro_pl_hash );
+					hash = post.attributes.meta.pmpro_pl_hash;
+				}
+			} );
 			// Replace attach button with the file name.
 			jQuery('#file_name_' + hash ).html('<a href="' + attachment.url + '"><b>' + attachment.filename + '</b></a>');
 			// Populate attachment ID into hidden form field.
-			console.log( attachment, hash );
-			console.log( jQuery('#plugin_licensing_file_' + hash) );
 			jQuery('#plugin_licensing_file_' + hash).val( attachment.id );
 		});
 

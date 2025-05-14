@@ -217,14 +217,20 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 		/**
 		 * Saves list of files in meta when membership levels are saved.
 		 *
-		 * @param  int $level_id
+		 * @param  int $level_id Membership Level ID.
 		 * @return void
 		 */
 		public function membership_level_save_files( $level_id ) {
-			// TODO does this need a nonce check?
 			if ( isset( $_POST['plugin_licensing_files'] ) ) {
 				$level_meta_files = array_map( 'intval', (array) $_POST['plugin_licensing_files'] );
 				update_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files', $level_meta_files );
+				// Store the hash in each file's post meta.
+				foreach ( $level_meta_files as $hash => $attachment_id ) {
+					if ( 0 === $attachment_id ) {
+						continue;
+					}
+					update_post_meta( $attachment_id, 'pmpro_pl_hash', $hash );
+				}
 			} else {
 				// User erased all downloads from this level.
 				delete_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files' );
@@ -260,7 +266,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 							<table id="pmpro-file-attachments-list" class="wp-list-table widefat fixed striped table-view-list">
 								<thead>
 									<tr>
-										<th scope="row" valign="top"><label><?php esc_html_e('File', 'pmpro-plugin-licensing' );?></label></th>
+										<th scope="row" valign="top"><label><?php esc_html_e( 'File', 'pmpro-plugin-licensing' ); ?></label></th>
 										<th scope="row" valign="top" class="file-hash">Hash</th>
 										<th scope="row" valign="top" class="file-remove">Remove</th>
 									</tr>
@@ -270,9 +276,10 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 							foreach ( $level_meta_files as $hash => $attachment_id ) :
 								$file = get_post( $attachment_id );
 								?>
-									<tr data-hash="<?php echo esc_attr( $hash ); ?>">
+									<tr>
 										<td id="file_name_<?php echo esc_attr( $hash ); ?>" class="file-name">
-											<?php // Link to file or Attach button if there is no file.
+											<?php
+											// Link to file or Attach button if there is no file.
 											if ( 0 !== $attachment_id ) {
 												printf(
 													'<a href="%s"><b>%s</b></a></td>',
@@ -289,8 +296,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 											?>
 										<td>
 											<?php // Hash. ?>
-											<input type="text" readonly="readonly" class="file-hash" id="plugin_licensing_hash_<?php echo esc_attr( $attachment_id ); ?>" value="<?php echo esc_attr( $hash ); ?>" />
-											<button type="button" class="button copy-hash" onclick="pmproPlCopyClipboard('plugin_licensing_hash_<?php echo esc_attr( $attachment_id ); ?>');">Copy hash</button>
+											<input type="text" readonly="readonly" class="file-hash" id="plugin_licensing_hash_<?php echo esc_attr( $hash ); ?>" value="<?php echo esc_attr( $hash ); ?>" />
+											<button type="button" class="button copy-hash" onclick="pmproPlCopyClipboard('plugin_licensing_hash_<?php echo esc_attr( $hash ); ?>');">Copy hash</button>
 										</td>
 										<td>
 											<?php // Remove button. ?>
@@ -330,7 +337,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			wp_register_script(
 				'pmpro-pl-settings',
 				plugins_url( "assets/js/settings{$min}.js", PMPRO_PLUGIN_LICENSING_PATH ),
-				array( 'jquery' ),
+				array( 'wp-api', 'jquery' ),
 				PMPRO_PLUGIN_LICENSING_VERISON,
 				true
 			);
