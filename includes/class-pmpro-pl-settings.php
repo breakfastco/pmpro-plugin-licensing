@@ -43,6 +43,9 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			add_action( 'pmpro_membership_level_after_other_settings', array( $this, 'membership_level_add_files_controls' ), 10, 1 );
 			// Change the upload path for files uploaded to Membership levels.
 			add_filter( 'upload_dir', array( $this, 'maybe_change_upload_path' ), 99 );
+
+			// Add an AJAX handler.
+			add_action( 'wp_ajax_pmpro_pl_generate_hash', array( $this, 'ajax_handler_generate_hash' ) );
 		}
 
 		public function add_submenu() {
@@ -56,12 +59,31 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			);
 		}
 
+		public function ajax_handler_generate_hash() {
+			// Verify nonce.
+			if ( ! wp_verify_nonce( $_POST['_ajax_nonce'], 'pmpro-pl-generate-hash' ) ) {
+				wp_send_json_error();
+				wp_die();
+			}
+
+			/**
+			 * Generate an md5 hash checksum and make sure it has not yet been
+			 * used by another file.
+			 */
+			$salt_string = 'pmpro_pl_hash_salt_';
+			$hash        = md5( $salt_string . wp_json_encode( $_POST ) );
+			while ( ! empty( PMPRO_PL_Download_Links::find_attachment_id( $hash ) ) ) {
+				$hash = md5( $salt_string . uniqid() );
+			}
+			wp_send_json_success( array( 'hash' => $hash ) );
+		}
+
 		public function extract_readme_data_during_uploads( $level_id ) {
 			if ( ! isset( $_POST['plugin_licensing_files'] ) ) {
 				return;
 			}
-			$attachment_ids = array_map( 'intval', (array) $_POST['plugin_licensing_files'] );
-			foreach ( $attachment_ids as $post_id ) {
+			$level_meta_files = array_map( 'intval', (array) $_POST['plugin_licensing_files'] );
+			foreach ( $level_meta_files as $hash => $post_id ) {
 
 				// Is it a zip file?
 				$mime_type = get_post_mime_type( $post_id );
@@ -103,9 +125,6 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 					if ( ! empty( $plugin_basename ) ) {
 						update_post_meta( $post_id, '_pmpro_pl_slug', $plugin_basename );
 					}
-
-					// Generate a hash checksum for this attachment that can represent it in URLs.
-					update_post_meta( $post_id, '_pmpro_pl_hash', md5( wp_json_encode( $plugin_data ) ) );
 
 					/**
 					 * Need to readme.txt data so the REST API can it available
@@ -204,8 +223,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 		public function membership_level_save_files( $level_id ) {
 			// TODO does this need a nonce check?
 			if ( isset( $_POST['plugin_licensing_files'] ) ) {
-				$attachment_ids = array_map( 'intval', (array) $_POST['plugin_licensing_files'] );
-				update_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files', $attachment_ids );
+				$level_meta_files = array_map( 'intval', (array) $_POST['plugin_licensing_files'] );
+				update_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files', $level_meta_files );
 			} else {
 				// User erased all downloads from this level.
 				delete_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files' );
@@ -220,42 +239,27 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 		 * @return void
 		 */
 		public function membership_level_add_files_controls( $level ) {
-			$level_id       = $level->id;
-			$attachment_ids = get_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files', true );
-			if ( ! is_array( $attachment_ids ) ) {
-				$attachment_ids = array();
+			$level_id         = $level->id;
+			$level_meta_files = get_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files', true );
+			if ( ! is_array( $level_meta_files ) ) {
+				$level_meta_files = array();
 			}
 
 			wp_enqueue_style( 'pmpro-pl-settings' );
+			wp_enqueue_script( 'pmpro-pl-settings' );
 
 			?>
-<style type="text/css">
-input.file-hash{
-	font-size: 11px;
-	font-family: monospace;
-	width: 21em;
-}
-.form-table th.file-id{
-	width: 30px;
-}
-.form-table th.file-hash{
-	width: 290px;
-}
-.form-table th.file-remove{
-	width: 60px;
-}
-</style>
 			<table class="form-table">
 				<tbody>
 					<tr>
 						<th scope="row" valign="top">
 							<label>Files</label></th>
 						<td>
+							<p>Use the <b>Add File</b> button below to create a hash for the plugin you'd like to sell. Ship this hash inside the plugin you attach to the hash in the table below. This will link the plugin to the correct membership when customer sites connect for updates.</p>
 							<p class="submit"><button type="button" class="button" id="add-file-attachment">Add File</button></p>
 							<table id="pmpro-file-attachments-list" class="wp-list-table widefat fixed striped table-view-list">
 								<thead>
 									<tr>
-										<th scope="row" valign="top" class="file-id"><label><?php esc_html_e('ID', 'pmpro-plugin-licensing' );?></label></th>
 										<th scope="row" valign="top"><label><?php esc_html_e('File', 'pmpro-plugin-licensing' );?></label></th>
 										<th scope="row" valign="top" class="file-hash">Hash</th>
 										<th scope="row" valign="top" class="file-remove">Remove</th>
@@ -263,21 +267,35 @@ input.file-hash{
 								</thead>
 								<tbody>
 							<?php
-							foreach ( $attachment_ids as $aid ) :
-								$file = get_post( $aid );
+							foreach ( $level_meta_files as $hash => $attachment_id ) :
+								$file = get_post( $attachment_id );
 								?>
-									<tr data-id="<?php echo esc_attr( $aid ); ?>">
-										<td><p class="description"><?php echo esc_html( $aid ); ?></p></td>
-										<td><a href="<?php echo esc_url( wp_get_attachment_url( $aid ) ); ?>"><b><?php echo esc_html( basename( $file->guid ) ); ?></b></a></td>
+									<tr data-hash="<?php echo esc_attr( $hash ); ?>">
+										<td id="file_name_<?php echo esc_attr( $hash ); ?>" class="file-name">
+											<?php // Link to file or Attach button if there is no file.
+											if ( 0 !== $attachment_id ) {
+												printf(
+													'<a href="%s"><b>%s</b></a></td>',
+													esc_url( wp_get_attachment_url( $attachment_id ) ),
+													esc_html( basename( $file->guid ) )
+												);
+											} else {
+												printf(
+													'<button type="button" class="button attach-file-to-row" data-hash="%s">%s</button>',
+													$hash,
+													esc_attr( __( 'Attach plugin .zip', 'pmpro-pl-licensing' ) )
+												);
+											}
+											?>
 										<td>
 											<?php // Hash. ?>
-											<input type="text" readonly="readonly" class="file-hash" id="plugin_licensing_hash_<?php echo esc_attr( $aid ); ?>" value="<?php echo esc_attr( get_post_meta( $aid, '_pmpro_pl_hash', true ) ); ?>" />
-											<button type="button" class="button copy-hash" onclick="pmproPlCopyClipboard('plugin_licensing_hash_<?php echo esc_attr( $aid ); ?>');">Copy hash</button>
+											<input type="text" readonly="readonly" class="file-hash" id="plugin_licensing_hash_<?php echo esc_attr( $attachment_id ); ?>" value="<?php echo esc_attr( $hash ); ?>" />
+											<button type="button" class="button copy-hash" onclick="pmproPlCopyClipboard('plugin_licensing_hash_<?php echo esc_attr( $attachment_id ); ?>');">Copy hash</button>
 										</td>
 										<td>
 											<?php // Remove button. ?>
 											<button type="button" class="button remove-file-attachment">Remove</button>
-											<input type="hidden" name="plugin_licensing_files[]" value="<?php echo esc_attr( $aid ); ?>">
+											<input type="hidden" name="plugin_licensing_files[<?php echo esc_attr( $hash ); ?>]"  id="plugin_licensing_file_<?php echo esc_attr( $hash ); ?>" value="<?php echo esc_attr( $attachment_id ); ?>">
 										</td>
 									</tr>
 								<?php
@@ -292,65 +310,6 @@ input.file-hash{
 					</tr>
 				</tbody>
 			</table>
-			<script>
-			jQuery(document).ready(function($){
-				var file_frame;
-
-				$('#add-file-attachment').on('click', function(e) {
-					e.preventDefault();
-
-					// If the media frame already exists, reopen it.
-					if (file_frame) {
-						file_frame.open();
-						return;
-					}
-
-					// Create the media frame.
-					file_frame = wp.media({
-						title: 'Select or Upload a .zip file',
-						library: {
-							type: 'application/zip',
-						},
-						button: {
-							text: 'Attach this file'
-						},
-						frame: 'select',
-						multiple: true
-					});
-					// Identify as uploaded with Plugin Licensing.
-					file_frame.uploader.options.uploader.params.is_pmpro_pl = true;
-
-					// When a file is selected, run a callback.
-					file_frame.on('select', function() {
-						var attachment = file_frame.state().get('selection').first().toJSON();
-						var tableRow = '<tr data-id="' + attachment.id + '">'
-							+ '<td><p class="description">' + attachment.id + '</p></td>'
-							+ '<td><a href="' + attachment.url + '"><b>' + attachment.filename + '</b></a></td>'
-							+ '<td>'
-							+ '<a href="' + attachment.editLink + '" target="_blank">Edit</a>'
-							+ '</td>'
-							+ '<td>'
-							+ '<button type="button" class="button remove-file-attachment">Remove</button>'
-							+ '<input type="hidden" name="plugin_licensing_files[]" value="' + attachment.id + '">'
-							+ '</td>'
-							+ '</tr>';
-						$('#pmpro-file-attachments-list tbody').append(tableRow);
-					});
-
-					// Finally, open the modal
-					file_frame.open();
-				});
-
-				$('#pmpro-file-attachments-list').on('click', '.remove-file-attachment', function(){
-					$(this).closest('tr').remove();
-				});
-			});
-
-			function pmproPlCopyClipboard( elementID ) {
-				document.querySelector('#'+elementID).select();
-				document.execCommand('copy');
-			}
-			</script>
 			<?php
 		}
 
@@ -366,6 +325,28 @@ input.file-hash{
 				plugins_url( "assets/css/settings{$min}.css", PMPRO_PLUGIN_LICENSING_PATH ),
 				array(),
 				PMPRO_PLUGIN_LICENSING_VERISON
+			);
+
+			wp_register_script(
+				'pmpro-pl-settings',
+				plugins_url( "assets/js/settings{$min}.js", PMPRO_PLUGIN_LICENSING_PATH ),
+				array( 'jquery' ),
+				PMPRO_PLUGIN_LICENSING_VERISON,
+				true
+			);
+
+			wp_add_inline_script(
+				'pmpro-pl-settings',
+				sprintf(
+					'const pmpro_pl_settings = %s;',
+					wp_json_encode(
+						(object) array(
+							'ajaxurl' => admin_url( 'admin-ajax.php' ),
+							'nonce'   => wp_create_nonce( 'pmpro-pl-generate-hash' ),
+						)
+					)
+				),
+				'before'
 			);
 		}
 

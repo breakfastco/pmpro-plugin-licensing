@@ -30,20 +30,6 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 		protected $plugin_hash = '';
 
 		/**
-		 * The plugin slug.
-		 *
-		 * @var string
-		 */
-		protected $plugin_slug = '';
-
-		/**
-		 * The plugin version.
-		 *
-		 * @var string
-		 */
-		protected $plugin_version = '';
-
-		/**
 		 * The store URL.
 		 *
 		 * @var string
@@ -151,7 +137,10 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 		}
 
 		public function get_plugin_slug() {
-			return $this->plugin_slug;
+			if ( ! function_exists( 'plugin_basename' ) ) {
+				return '';
+			}
+			return plugin_basename( PMPRO_PLUGIN_LICENSING_PATH );
 		}
 
 		/**
@@ -166,14 +155,6 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 
 		public function set_plugin_hash( $plugin_hash ) {
 			$this->plugin_hash = $plugin_hash;
-		}
-
-		public function set_plugin_slug( $plugin_slug ) {
-			$this->plugin_slug = $plugin_slug;
-		}
-
-		public function set_plugin_version( $plugin_version ) {
-			$this->plugin_version = $plugin_version;
 		}
 
 		public function set_store_url( $store_url ) {

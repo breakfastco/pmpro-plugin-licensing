@@ -41,7 +41,7 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			}
 
 			// Get the latest version info from attachment meta.
-			// $file is a hash we can find in attachment meta.
+			$hash          = $params['file'];
 			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
 			$slug          = get_post_meta( $attachment_id, '_pmpro_pl_slug', true );
 
@@ -52,7 +52,7 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				'slug'        => $slug, // This slug is in the View details link.
 				'plugin'      => $slug,
 				'new_version' => get_post_meta( $attachment_id, '_pmpro_pl_version', true ),
-				'package'     => PMPRO_PL_Download_Links::create_download_link( get_post( $attachment_id ) ),
+				'package'     => PMPRO_PL_Download_Links::create_download_link( $hash ),
 			);
 
 			wp_send_json_success( $result );

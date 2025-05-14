@@ -86,8 +86,8 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 
 		public function show_users_their_downloads( $level ) {
 			// Are threre any files associated with this membership level?
-			$files = get_pmpro_membership_level_meta( $level->id, 'plugin_licensing_files', true );
-			if ( empty( $files ) ) {
+			$level_meta_files = get_pmpro_membership_level_meta( (int) $level->id, 'plugin_licensing_files', true );
+			if ( empty( $level_meta_files ) ) {
 				return;
 			}
 
@@ -100,15 +100,18 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 					<tr>
 						<th><?php esc_html_e( 'Download', 'paid-memberships-pro' ); ?></th>
 						<th><?php esc_html_e( 'Version', 'paid-memberships-pro' ); ?></th>
+						<th><?php esc_html_e( 'Active Sites', 'paid-memberships-pro' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php
-					foreach ( $files as $attachment_id ) {
+					foreach ( $level_meta_files as $hash => $attachment_id ) {
 						$file = get_post( $attachment_id );
+
+						// TODO active sites.
 						?>
 						<tr>
-							<td><a href="<?php echo esc_url( PMPRO_PL_Download_Links::create_download_link( $file ) ); ?>" target="_blank"><?php echo esc_html( basename( $file->guid ) ); ?></a></td>
+							<td><a href="<?php echo esc_url( PMPRO_PL_Download_Links::create_download_link( $hash ) ); ?>" target="_blank"><?php echo esc_html( basename( $file->guid ) ); ?></a></td>
 							<td><?php echo esc_html( get_post_meta( $attachment_id, '_pmpro_pl_version', true ) ); ?></td>
 							<td><a>5 sites</a></td>
 						</tr>

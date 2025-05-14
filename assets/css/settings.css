@@ -15,3 +15,16 @@
 		margin-right: .5em;
 	}
 }
+
+/* List of files we add to the edit Membership Level page. */
+input.file-hash{
+	font-size: 11px;
+	font-family: monospace;
+	width: 21em;
+}
+.form-table th.file-hash{
+	width: 290px;
+}
+.form-table th.file-remove{
+	width: 60px;
+}

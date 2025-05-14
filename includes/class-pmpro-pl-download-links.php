@@ -56,13 +56,7 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 			}
 
 			// Use the hash to find the attachment ID.
-			global $wpdb;
-			$attachment_id = $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT post_id FROM `{$wpdb->prefix}postmeta` WHERE meta_value = %s and meta_key = '_pmpro_pl_hash' LIMIT 1",
-					$hash
-				)
-			);
+			$attachment_id = self::find_attachment_id( $hash );
 
 			if ( empty( $attachment_id ) ) {
 				wp_safe_redirect( site_url( '404.php' ) );
@@ -125,22 +119,39 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 		/**
 		 * Creates a download link for the file.
 		 *
-		 * @param WP_Post $file The file to create a download link for.
+		 * @param  string $hash The string that links Membership Levels and Media Library attachments.
 		 * @return string The download link.
 		 */
-		public static function create_download_link( $file ) {
-			if ( ! isset( $file->ID ) ) {
+		public static function create_download_link( $hash ) {
+			if ( empty( $hash ) ) {
 				return '';
 			}
-			/**
-			 * Requirements are
-			 * - does not work for logged out users
-			 * - does not indicate the files actual URL
-			 */
 
 			// https://breakfastco.xyz/membership-account/download/9c43f2e5857b1032374052dbfb8357b6
-			$hash = get_post_meta( $file->ID, '_pmpro_pl_hash', true );
 			return site_url( 'membership-account/download/' . $hash );
+		}
+
+		public static function find_attachment_id( $hash ) {
+			// Get all Membership Levels.
+			if ( ! function_exists( 'pmpro_getAllLevels' ) ) {
+				return 0;
+			}
+			$levels = pmpro_getAllLevels( true );
+			foreach ( $levels as $level ) {
+				// Does this Membership Level have files?
+				$level_meta_files = get_pmpro_membership_level_meta( (int) $level->id, 'plugin_licensing_files', true );
+				if ( empty( $level_meta_files ) ) {
+					// No.
+					continue;
+				}
+				foreach ( $level_meta_files as $level_meta_hash => $attachment_id ) {
+					if ( $hash === $level_meta_hash ) {
+						return $attachment_id;
+					}
+				}
+			}
+			// Oh no, we didn't find it.
+			return 0;
 		}
 	}
 	new PMPRO_PL_Download_Links();
