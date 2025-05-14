@@ -255,7 +255,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 						<th scope="row" valign="top">
 							<label>Files</label></th>
 						<td>
-							<p>Use the <b>Add File</b> button below to create a hash for the plugin you'd like to sell. Ship this hash inside the plugin you attach to the hash in the table below. This will link the plugin to the correct membership when customer sites connect for updates.</p>
+							<p>Use the <b>Add File</b> button below to create a hash for the plugin you'd like to sell. Use this hash in your plugin's code when it connects to this store to check for updates. The hash links plugins to this Membership Level.</p>
 							<p class="submit"><button type="button" class="button" id="add-file-attachment">Add File</button></p>
 							<table id="pmpro-file-attachments-list" class="wp-list-table widefat fixed striped table-view-list">
 								<thead>
