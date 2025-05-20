@@ -3,7 +3,8 @@
  */
 jQuery(document).ready(function($){
 
-	$('#add-file-attachment').on('click', function(e) {
+	// One Add File button.
+	$('#file-attachment-add').on('click', function(e) {
 		/**
 		 * Create a row with a hash but no file yet. The user needs
 		 * to put the hash into their plugin and never change it so
@@ -51,20 +52,21 @@ function pmproPlCopyClipboard( elementID ) {
 	document.execCommand('copy');
 }
 
-var file_frame;
+var pmpro_pl_file_frame;
 function pmproPlAddClickHanders() {
 	jQuery('.attach-file-to-row').on('click', function(e) {
 		var hash = jQuery(this).data('hash');
 		e.preventDefault();
 
-		// If the media frame already exists, reopen it.
-		if (file_frame) {
-			file_frame.open();
-			return;
-		}
+		// Can't do this if they share a file frame variable.
+		// // If the media frame already exists, reopen it.
+		// if (pmpro_pl_file_frame) {
+		// 	pmpro_pl_file_frame.open();
+		// 	return;
+		// }
 
 		// Create the media frame.
-		file_frame = wp.media({
+		pmpro_pl_file_frame = wp.media({
 			title: 'Select or Upload a .zip file',
 			library: {
 				type: 'application/zip',
@@ -76,11 +78,11 @@ function pmproPlAddClickHanders() {
 			multiple: true
 		});
 		// Identify as uploaded with Plugin Licensing.
-		file_frame.uploader.options.uploader.params.is_pmpro_pl = true;
+		pmpro_pl_file_frame.uploader.options.uploader.params.is_pmpro_pl = true;
 
 		// When a file is selected, run a callback.
-		file_frame.on('select', function() {
-			var attachment = file_frame.state().get('selection').first().toJSON();
+		pmpro_pl_file_frame.on('select', function() {
+			var attachment = pmpro_pl_file_frame.state().get('selection').first().toJSON();
 			// Does this attachment already have a hash stored in post meta?
 			var post = new wp.api.models.Media( { id: attachment.id } );
 			post.fetch().done( function( result ) {
@@ -105,7 +107,69 @@ function pmproPlAddClickHanders() {
 		});
 
 		// Finally, open the modal
-		file_frame.open();
+		pmpro_pl_file_frame.open();
+	});
+
+	// Many Replace buttons.
+	jQuery('.file-attachment-replace').on('click', function(e) {
+		/**
+		 * Launch the media modal so the user can select a file to replace. The
+		 * user is publishing a new version of the plugin sold with this
+		 * Membership Level.
+		 */
+		// Can't do this if they share a file frame variable.
+		// // If the media frame already exists, reopen it.
+		// if (pmpro_pl_file_frame) {
+		// 	pmpro_pl_file_frame.open();
+		// 	return;
+		// }
+
+		// Create the media frame.
+		pmpro_pl_file_frame = wp.media({
+			title: 'Select or Upload a .zip file',
+			library: {
+				type: 'application/zip',
+			},
+			button: {
+				text: 'Attach this file'
+			},
+			frame: 'select',
+			multiple: true
+		});
+		// Identify as uploaded with Plugin Licensing.
+		pmpro_pl_file_frame.uploader.options.uploader.params.is_pmpro_pl = true;
+
+		var rowHash = e.target.parentNode.id.replace('file_name_', '');
+
+		// When a file is selected, run a callback.
+		pmpro_pl_file_frame.on('select', function() {
+			var attachment = pmpro_pl_file_frame.state().get('selection').first().toJSON();
+			// Does this attachment already have a hash stored in post meta?
+			var post = new wp.api.models.Media( { id: attachment.id } );
+			post.fetch().done( function( result ) {
+				if( '' !== post.attributes.meta.pmpro_pl_hash ) {
+					/**
+					 * Yes. Tell the user the file already has a hash. Ask if we
+					 * should discard the file's hash and assign this download's
+					 * hash to the file.
+					 */
+					var discard = confirm( 'The file you have chosen already has a hash. Changing this download\'s hash will break updates for anyone who already purchased this Membership Level. Discard this file\'s hash and assign ' + rowHash + '?' );
+					if ( discard ) {
+						// Change the hash in attachment post meta.
+					} else {
+						// Abort? Shopkeeper should never change the row hash.
+					}
+				}
+			} );
+			// Replace the old file name with the new file name. Keep the Replace button.
+			jQuery('#file_name_' + rowHash + ' a' ).remove();
+			jQuery('#file_name_' + rowHash ).prepend( '<a href="' + attachment.url + '"><b>' + attachment.filename + '</b></a>' );
+			// Populate attachment ID into hidden form field.
+			jQuery('#plugin_licensing_file_' + rowHash).val( attachment.id );
+		});
+
+		// Finally, open the modal
+		pmpro_pl_file_frame.open();
 	});
 
 	jQuery('#pmpro-file-attachments-list').on('click', '.remove-file-attachment', function(){

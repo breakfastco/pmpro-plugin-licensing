@@ -261,7 +261,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 							<label>Files</label></th>
 						<td>
 							<p>Use the <b>Add File</b> button below to create a hash for the plugin you'd like to sell. Use this hash in your plugin's code when it connects to this store to check for updates. The hash links plugins to this Membership Level.</p>
-							<p class="submit"><button type="button" class="button" id="add-file-attachment">Add File</button></p>
+							<p class="submit"><button type="button" class="button" id="file-attachment-add" title="Upload or choose a file to provide with this Membership Level">Add File</button></p>
 							<table id="pmpro-file-attachments-list" class="wp-list-table widefat fixed striped table-view-list">
 								<thead>
 									<tr>
@@ -283,9 +283,10 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 												// File name linked to download it.
 												// Button to replace the file with a new version.
 												printf(
-													'<a href="%s"><b>%s</b></a><button type="button" class="button">%s</button>',
+													'<a href="%s"><b>%s</b></a><button type="button" class="button file-attachment-replace" title="%s">%s</button>',
 													esc_url( wp_get_attachment_url( $attachment_id ) ),
 													esc_html( basename( $file->guid ) ),
+													esc_attr__( 'Replace the file associated with this hash', 'pmpro-plugin-licensing' ),
 													esc_html__( 'Replace', 'pmpro-plugin-licensing' )
 												);
 											} else {
@@ -299,11 +300,11 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 										<td>
 											<?php // Hash. ?>
 											<input type="text" readonly="readonly" class="file-hash" id="plugin_licensing_hash_<?php echo esc_attr( $hash ); ?>" value="<?php echo esc_attr( $hash ); ?>" />
-											<button type="button" class="button copy-hash" onclick="pmproPlCopyClipboard('plugin_licensing_hash_<?php echo esc_attr( $hash ); ?>');">Copy hash</button>
+											<button type="button" class="button copy-hash" title="<?php esc_attr_e( 'Copy this hash to the clipboard', 'pmrpo-plugin-licensing' ); ?>" onclick="pmproPlCopyClipboard('plugin_licensing_hash_<?php echo esc_attr( $hash ); ?>');">Copy hash</button>
 										</td>
 										<td>
 											<?php // Remove button. ?>
-											<button type="button" class="button remove-file-attachment">Remove</button>
+											<button type="button" class="button remove-file-attachment" title="Remove this hash and file from this Membership Level">Remove</button>
 											<input type="hidden" name="plugin_licensing_files[<?php echo esc_attr( $hash ); ?>]"  id="plugin_licensing_file_<?php echo esc_attr( $hash ); ?>" value="<?php echo esc_attr( $attachment_id ); ?>">
 										</td>
 									</tr>
