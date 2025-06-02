@@ -48,10 +48,8 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		public function file_handler( $request ) {
 			$params = $request->get_params();
 
-			// license_key
-			// hash?
-
-			if ( empty( $params['file'] ) ) {
+			// Only paying customers with license keys get updates.
+			if ( empty( $params['license'] ) || empty( $params['file'] ) ) {
 				// Return the same 404 as an invalid route.
 				return new WP_Error(
 					'rest_no_route',
@@ -63,8 +61,30 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			// Get the latest version info from attachment meta.
 			$hash          = $params['file'];
 			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
-			$slug          = get_post_meta( $attachment_id, '_pmpro_pl_slug', true );
+			if ( 0 === $attachment_id ) {
+				// Sorry, invalid file.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed.' ),
+					array( 'status' => 401 )
+				);
+			}
 
+			// Is the license valid?
+			$license_check_args = array(
+				'license_key'   => $params['license'],
+				'attachment_id' => $attachment_id,
+			);
+			if ( ! pmpro_pl_customer_license_is_valid( $license_check_args ) ) {
+				// Sorry, invalid license.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			$slug   = get_post_meta( $attachment_id, '_pmpro_pl_slug', true );
 			$result = array(
 				'icons'       => array(
 					'default' => plugins_url( 'assets/icon.png', PMPRO_PLUGIN_LICENSING_PATH ),
