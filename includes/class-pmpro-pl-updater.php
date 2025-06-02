@@ -103,23 +103,57 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 			// License key could be empty, but we still want to show a pending update.
 			// Get this file's details from breakfastco.xyz.
 			$args     = array(
-				'license_key' => pmpro_plugin_licensing_get_license_key(),
-				'file'        => $this->get_plugin_hash(),
+				'license' => pmpro_plugin_licensing_get_license_key(),
+				'file'    => $this->get_plugin_hash(),
 			);
-			$response = wp_remote_get( $this->get_store_url( 'wp-json/pmpro/v1/files' ), $args );
+			$url      = add_query_arg( $args, $this->get_store_url( 'wp-json/pmpro/v1/files' ) );
+			$response = wp_remote_get( $url );
 			if ( is_wp_error( $response ) || 404 === $response['response']['code'] ) {
+				// cURL error 60: SSL peer certificate or SSH remote key was not OK.
+				// TODO log something.
 				return $transient;
 			}
 			$response_data = json_decode( wp_remote_retrieve_body( $response ) );
-			if ( ! empty( $response_data->version ) && version_compare( $response_data->version, PMPRO_PLUGIN_LICENSING_VERISON, '>' ) ) {
+			if ( ! empty( $response_data->data->new_version ) && version_compare( $response_data->data->new_version, PMPRO_PLUGIN_LICENSING_VERISON, '>' ) ) {
 				$transient->response[ $plugin_slug ] = (object) array(
-					'icons'       => array(
-						'default' => plugins_url( 'assets/icon.png', PMPRO_PLUGIN_LICENSING_PATH ),
+					'id'               => '',
+					'slug'             => $response_data->data->slug, // This slug is in the View details link.
+					'plugin'           => $this->get_plugin_slug(), // Current slug the update is for.
+					'new_version'      => $response_data->data->new_version,
+					'url'              => '',
+					'package'          => $response_data->data->download_url,
+					'icons'            => array(
+						'1x' => plugins_url( 'assets/icon.png', PMPRO_PLUGIN_LICENSING_PATH ),
+						//'1x',
+						//'2x',
+						//'svg',
 					),
-					'slug'        => $response_data->slug, // This slug is in the View details link.
-					'plugin'      => $this->get_plugin_slug(), // Current slug the update is for.
-					'new_version' => $response_data->version,
-					'package'     => $response_data->download_url,
+					'banners'          => array(),
+					'banners_rtl'      => array(),
+					'requires'         => '',
+					'tested'           => '',
+					'requires_php'     => '',
+					'requires_plugins' => array(),
+				);
+			} else {
+				// No update is available.
+				// Adding the "mock" item to the `no_update` property is required
+				// for the enable/disable auto-updates links to correctly appear in UI.
+				$transient->no_update[ $response_data->slug ] = (object) array(
+					'id'               => $this->get_plugin_slug(),
+					'slug'             => $this->get_plugin_slug(),
+					'plugin'           => $this->get_plugin_slug(),
+					'new_version'      => '',
+					'url'              => '',
+					'package'          => '',
+					'icons'            => array(
+						'1x' => plugins_url( 'assets/icon.png', PMPRO_PLUGIN_LICENSING_PATH ),
+					),
+					'banners'          => array(),
+					'banners_rtl'      => array(),
+					'tested'           => '',
+					'requires_php'     => '',
+					'requires_plugins' => array(),
 				);
 			}
 
