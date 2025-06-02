@@ -49,6 +49,11 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 			add_action( 'template_redirect', array( $this, 'deliver_file_download' ) );
 		}
 
+		/**
+		 * Redirects to a file or an error page.
+		 *
+		 * @return void
+		 */
 		public function deliver_file_download() {
 			$hash = get_query_var( $this->query_var() );
 			if ( empty( $hash ) ) {
@@ -131,6 +136,12 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 			return site_url( 'membership-account/download/' . $hash );
 		}
 
+		/**
+		 * Finds a file's attachment post ID given its hash or zero.
+		 *
+		 * @param  string $hash
+		 * @return int
+		 */
 		public static function find_attachment_id( $hash ) {
 			// Get all Membership Levels.
 			if ( ! function_exists( 'pmpro_getAllLevels' ) ) {

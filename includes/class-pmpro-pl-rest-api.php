@@ -39,6 +39,12 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			);
 		}
 
+		/**
+		 * Handles REST requests for files at /wp-json/pmpro/v1/files.
+		 *
+		 * @param  mixed $request
+		 * @return void
+		 */
 		public function file_handler( $request ) {
 			$params = $request->get_params();
 
