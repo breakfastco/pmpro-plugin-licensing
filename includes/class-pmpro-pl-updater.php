@@ -87,6 +87,12 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 			return $api;
 		}
 
+		/**
+		 * check_for_updates
+		 *
+		 * @param  mixed $transient
+		 * @return void
+		 */
 		public function check_for_updates( $transient ) {
 			// The filter pre_set_site_transient_update_plugins is called twice.
 			// Act on the second run after the checked data is set.
