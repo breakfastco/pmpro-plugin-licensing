@@ -149,7 +149,7 @@ function pmpro_pl_customer_license_is_valid( $args ) {
 	// Examine each of this user's memberships.
 	foreach ( $levels as $level ) {
 		// Is this membership expired?
-		if ( (int) $level->enddate < time() ) {
+		if ( null !== $level->enddate && (int) $level->enddate < time() ) {
 			// Yes.
 			continue;
 		}
