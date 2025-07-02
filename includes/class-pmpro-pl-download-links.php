@@ -36,9 +36,9 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 		 */
 		public function add_hooks() {
 			// Only do this once.
-			// if ( has_filter( 'init', array( $this, 'add_rewrite_rules' ) ) ) {
-			// 	return;
-			// }
+			if ( has_filter( 'init', array( $this, 'add_rewrite_rules' ) ) ) {
+				return;
+			}
 
 			// Make our URLs pretty.
 			add_action( 'init', array( $this, 'add_rewrite_rules' ) );

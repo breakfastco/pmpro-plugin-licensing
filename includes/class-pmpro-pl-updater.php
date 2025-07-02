@@ -30,6 +30,20 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 		protected $plugin_hash = '';
 
 		/**
+		 * The plugin slug.
+		 *
+		 * @var string
+		 */
+		protected $plugin_slug = '';
+
+		/**
+		 * The plugin version.
+		 *
+		 * @var string
+		 */
+		protected $plugin_version = '';
+
+		/**
 		 * The store URL.
 		 *
 		 * @var string
@@ -84,6 +98,17 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 			$api->sections['changelog']    = 'Changelog';
 			// $api->requires              = '';
 
+			$license_key = pmpro_plugin_licensing_get_license_key();
+			if ( ! empty( $license_key ) && ! empty( $api->download_link ) ) {
+				$api->download_link = add_query_arg( 'key', $license_key, $api->download_link );
+			}
+			if ( ! empty( $license_key ) && ! empty( $api->package ) ) {
+				$api->package = add_query_arg( 'key', $license_key, $api->package );
+			}
+			if ( empty( $api->upgrade_notice ) && ! pmpro_plugin_licensing_license_is_valid( $license_key ) ) {
+				$api->upgrade_notice = __( 'Important: This plugin requires a valid license key to update.', 'pmpro-plugin-licensing' );
+			}
+
 			return $api;
 		}
 
@@ -100,62 +125,91 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 				return $transient;
 			}
 
-			// License key could be empty, but we still want to show a pending update.
-			// Get this file's details from breakfastco.xyz.
-			$args     = array(
-				'license' => pmpro_plugin_licensing_get_license_key(),
-				'file'    => $this->get_plugin_hash(),
-			);
-			$url      = add_query_arg( $args, $this->get_store_url( 'wp-json/pmpro/v1/files' ) );
-			$response = wp_remote_get( $url );
-			if ( is_wp_error( $response ) || 404 === $response['response']['code'] ) {
-				// cURL error 60: SSL peer certificate or SSH remote key was not OK.
-				// TODO log something.
+			// Create option name from plugin slug.
+			$license_key = pmpro_plugin_licensing_get_license_key();
+			if ( ! $license_key ) {
 				return $transient;
 			}
-			$response_data = json_decode( wp_remote_retrieve_body( $response ) );
-			if ( ! empty( $response_data->data->new_version ) && version_compare( $response_data->data->new_version, PMPRO_PLUGIN_LICENSING_VERISON, '>' ) ) {
-				$transient->response[ $plugin_slug ] = (object) array(
-					'id'               => '',
-					'slug'             => $response_data->data->slug, // This slug is in the View details link.
-					'plugin'           => $this->get_plugin_slug(), // Current slug the update is for.
-					'new_version'      => $response_data->data->new_version,
-					'url'              => '',
-					'package'          => $response_data->data->download_url,
-					'icons'            => array(
-						'1x' => plugins_url( 'assets/icon.png', PMPRO_PLUGIN_LICENSING_PATH ),
-						//'1x',
-						//'2x',
-						//'svg',
-					),
-					'banners'          => array(),
-					'banners_rtl'      => array(),
-					'requires'         => '',
-					'tested'           => '',
-					'requires_php'     => '',
-					'requires_plugins' => array(),
-				);
-			} else {
-				// No update is available.
-				// Adding the "mock" item to the `no_update` property is required
-				// for the enable/disable auto-updates links to correctly appear in UI.
-				$transient->no_update[ $response_data->slug ] = (object) array(
-					'id'               => $this->get_plugin_slug(),
-					'slug'             => $this->get_plugin_slug(),
-					'plugin'           => $this->get_plugin_slug(),
-					'new_version'      => '',
-					'url'              => '',
-					'package'          => '',
-					'icons'            => array(
-						'1x' => plugins_url( 'assets/icon.png', PMPRO_PLUGIN_LICENSING_PATH ),
-					),
-					'banners'          => array(),
-					'banners_rtl'      => array(),
-					'tested'           => '',
-					'requires_php'     => '',
-					'requires_plugins' => array(),
-				);
-			}
+
+			// $response = wp_remote_get( 'https://breakfastco.xyz/wp-json/pmpro/v1/files?license=' . $license_key . '&file=' . $this->plugin_hash );
+			// $response_data = json_decode( wp_remote_retrieve_body( $response ) );
+			// if ( ! empty( $response_data->data->new_version ) && version_compare( $response_data->data->new_version, PMPRO_PLUGIN_LICENSING_VERISON, '>' ) ) {
+			// 	$transient->response[ $plugin_slug ] = (object) array(
+			// 		'id'               => '',
+			// 		'slug'             => $response_data->data->slug, // This slug is in the View details link.
+			// 		'plugin'           => $this->get_plugin_slug(), // Current slug the update is for.
+			// 		'new_version'      => $response_data->data->new_version,
+			// 		'url'              => '',
+			// 		'package'          => $response_data->data->download_url,
+			// 		'icons'            => array(
+			// 			'1x' => plugins_url( 'assets/icon.png', PMPRO_PLUGIN_LICENSING_PATH ),
+			// 			//'1x',
+			// 			//'2x',
+			// 			//'svg',
+			// 		),
+			// 		'banners'          => array(),
+			// 		'banners_rtl'      => array(),
+			// 		'requires'         => '',
+			// 		'tested'           => '',
+			// 		'requires_php'     => '',
+			// 		'requires_plugins' => array(),
+			// 	);
+			// } else {
+			// 	// No update is available.
+			// 	// Adding the "mock" item to the `no_update` property is required
+			// 	// for the enable/disable auto-updates links to correctly appear in UI.
+			// 	$transient->no_update[ $response_data->slug ] = (object) array(
+			// 		'id'               => $this->get_plugin_slug(),
+			// 		'slug'             => $this->get_plugin_slug(),
+			// 		'plugin'           => $this->get_plugin_slug(),
+			// 		'new_version'      => '',
+			// 		'url'              => '',
+			// 		'package'          => '',
+			// 		'icons'            => array(
+			// 			'1x' => plugins_url( 'assets/icon.png', PMPRO_PLUGIN_LICENSING_PATH ),
+			// 		),
+			// 		'banners'          => array(),
+			// 		'banners_rtl'      => array(),
+			// 		'tested'           => '',
+			// 		'requires_php'     => '',
+			// 		'requires_plugins' => array(),
+			// 	);
+			// }
+
+			// Before the REST API endpoint exists, pretend there is always an update.
+			$plugin_slug                         = $this->get_plugin_slug();
+			$transient->response[ $plugin_slug ] = (object) array(
+				'icons'       => array(
+					'default' => plugins_url( 'assets/icon.png', PMPRO_PLUGIN_LICENSING_PATH ),
+				),
+				'slug'        => $plugin_slug, // This slug is in the View details link.
+				'plugin'      => $plugin_slug,
+				'new_version' => '1.2.3',
+				'package'     => 'https://breakfastco.xyz/downloads/downloads/downloads/pmpro-plugin-licensing.zip',
+			);
+
+			// // Check for updates from the store.
+			// $response = wp_remote_post( $this->store_url . '/wp-json/pmpro-license/v1/update', array(
+			// 'body' => array(
+			// 'license_key' => get_option( 'your_plugin_license_key' ),
+			// 'plugin_slug' => $this->plugin_slug,
+			// ),
+			// ) );
+
+			// if ( is_wp_error( $response ) ) {
+			// return $transient;
+			// }
+
+			// $data = json_decode( wp_remote_retrieve_body( $response ) );
+
+			// if ( ! empty( $data->version ) && version_compare( $data->version, $this->plugin_version, '>' ) ) {
+			// $transient->response[ $this->plugin_slug ] = (object) array(
+			// 'slug'        => $data->slug,
+			// 'plugin'      => $this->plugin_slug,
+			// 'new_version' => $data->version,
+			// 'package'     => $data->download_url,
+			// );
+			// }
 
 			return $transient;
 		}
