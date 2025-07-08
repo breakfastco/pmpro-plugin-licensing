@@ -49,6 +49,60 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 			add_action( 'template_redirect', array( $this, 'deliver_file_download' ) );
 		}
 
+		public function add_query_vars( $query_vars ) {
+			$query_vars[] = $this->query_var();
+			return $query_vars;
+		}
+
+		public function add_rewrite_rules() {
+			$pattern = $this->url_path() . '([a-fA-F0-9]{32})/?$';
+			add_rewrite_rule( $pattern, 'index.php?' . $this->query_var() . '=$matches[1]', 'top' );
+		}
+
+		/**
+		 * Creates a download link for the file.
+		 *
+		 * @param  string $hash The string that links Membership Levels and Media Library attachments.
+		 * @return string The download link.
+		 */
+		public static function create_download_link( $hash ) {
+			if ( empty( $hash ) ) {
+				return '';
+			}
+
+			// https://example.com/membership-account/download/9c43f2e5857b1032374052dbfb8357b6
+			return site_url( $this->url_path() . $hash );
+		}
+
+		/**
+		 * Finds a file's attachment post ID given its hash or zero.
+		 *
+		 * @param  string $hash
+		 * @return int
+		 */
+		public static function find_attachment_id( $hash ) {
+			// Get all Membership Levels.
+			if ( ! function_exists( 'pmpro_getAllLevels' ) ) {
+				return 0;
+			}
+			$levels = pmpro_getAllLevels( true );
+			foreach ( $levels as $level ) {
+				// Does this Membership Level have files?
+				$level_meta_files = get_pmpro_membership_level_meta( (int) $level->id, 'plugin_licensing_files', true );
+				if ( empty( $level_meta_files ) ) {
+					// No.
+					continue;
+				}
+				foreach ( $level_meta_files as $level_meta_hash => $attachment_id ) {
+					if ( $hash === $level_meta_hash ) {
+						return $attachment_id;
+					}
+				}
+			}
+			// Oh no, we didn't find it.
+			return 0;
+		}
+
 		/**
 		 * Redirects to a file or an error page.
 		 *
@@ -109,60 +163,6 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 			header( 'Content-Length: ' . filesize( $file_path ) );
 			readfile( $file_path );
 			exit;
-		}
-
-		public function add_rewrite_rules() {
-			// Pattern for "more-notification-types-v1.0.2.zip".
-			add_rewrite_rule( $this->url_path() . '([a-zA-Z0-9\._\-]+)$', 'index.php?' . $this->query_var() . '=$matches[1]', 'top' );
-		}
-
-		public function add_query_vars( $query_vars ) {
-			$query_vars[] = $this->query_var();
-			return $query_vars;
-		}
-
-		/**
-		 * Creates a download link for the file.
-		 *
-		 * @param  string $hash The string that links Membership Levels and Media Library attachments.
-		 * @return string The download link.
-		 */
-		public static function create_download_link( $hash ) {
-			if ( empty( $hash ) ) {
-				return '';
-			}
-
-			// https://breakfastco.xyz/membership-account/download/9c43f2e5857b1032374052dbfb8357b6
-			return site_url( 'membership-account/download/' . $hash );
-		}
-
-		/**
-		 * Finds a file's attachment post ID given its hash or zero.
-		 *
-		 * @param  string $hash
-		 * @return int
-		 */
-		public static function find_attachment_id( $hash ) {
-			// Get all Membership Levels.
-			if ( ! function_exists( 'pmpro_getAllLevels' ) ) {
-				return 0;
-			}
-			$levels = pmpro_getAllLevels( true );
-			foreach ( $levels as $level ) {
-				// Does this Membership Level have files?
-				$level_meta_files = get_pmpro_membership_level_meta( (int) $level->id, 'plugin_licensing_files', true );
-				if ( empty( $level_meta_files ) ) {
-					// No.
-					continue;
-				}
-				foreach ( $level_meta_files as $level_meta_hash => $attachment_id ) {
-					if ( $hash === $level_meta_hash ) {
-						return $attachment_id;
-					}
-				}
-			}
-			// Oh no, we didn't find it.
-			return 0;
 		}
 	}
 	new PMPRO_PL_Download_Links();

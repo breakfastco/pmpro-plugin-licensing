@@ -10,9 +10,10 @@ WordPress plugin. Add-on for Paid Memberships Pro. Sells WordPress plugins &amp;
 
 ## TODO
 
-- [ ] Stop faking the update/license check. Design bruno request called by check_updates()
-- [ ] Buy PMPro. Buy that membership with a customer account and find the .zip downloads and license key
 - [ ] When the .zip is uploaded to the store, extract the readme.txt and stash the values in meta fields on the attachment
+- [ ] Add an updater to more-notification-types from akamaiwp.breakfastco.xyz store, later to be changed to main site.
+- [ ] replace button isn't immediately added when choose zip file
+- [ ] Buy PMPro. Buy that membership with a customer account and find the .zip downloads and license key
 - [ ] Clone the settings page banner CSS so a PMPro redesign does not break my tab, this looks good https://www.linode.com/support/contact/
 - [ ] Build active/valid license check into settings page and use a green check mark like Gravity Wiz
   - [ ] Fake a purchase
@@ -23,3 +24,13 @@ WordPress plugin. Add-on for Paid Memberships Pro. Sells WordPress plugins &amp;
 
 - [ ] Verify that your uploads folder is not served by a CDN (e.g. with WP Engine and some other hosts).
 - [ ] Make sure the Level Group these levels are a part of allows multiple selections. This is the key to allowing people to purchase more than one downloadable within the group, without losing access to their previous purchase.
+
+## Tools
+
+### List all file hashes
+
+```
+SELECT p.ID as attachment_id, p.post_title as title, p.post_name as slug, p.guid as file_url, pm.meta_value as file_hash, p.post_date as created_date, p.post_modified as modified_date FROM wpbc_posts p INNER JOIN wpbc_postmeta pm ON p.ID = pm.post_id WHERE p.post_type = 'attachment' AND p.post_status = 'inherit' AND pm.meta_key = 'pmpro_pl_hash' AND pm.meta_value != '' ORDER BY p.post_title ASC; 
+```
+
+### List all license keys
