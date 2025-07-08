@@ -113,7 +113,8 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 		}
 
 		/**
-		 * check_for_updates
+		 * Check for updates to this plugin. This phones home to Breakfast to
+		 * find new versions of Paid Memberships Pro - Plugin Licensing.
 		 *
 		 * @param  mixed $transient
 		 * @return void
@@ -131,7 +132,7 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 				return $transient;
 			}
 
-			// $response = wp_remote_get( 'https://breakfastco.xyz/wp-json/pmpro/v1/files?license=' . $license_key . '&file=' . $this->plugin_hash );
+			// $response = wp_remote_get( $this->get_store_url( '/wp-json/pmpro/v1/files?license=' . $license_key . '&file=' . $this->plugin_hash ) );
 			// $response_data = json_decode( wp_remote_retrieve_body( $response ) );
 			// if ( ! empty( $response_data->data->new_version ) && version_compare( $response_data->data->new_version, PMPRO_PLUGIN_LICENSING_VERISON, '>' ) ) {
 			// 	$transient->response[ $plugin_slug ] = (object) array(

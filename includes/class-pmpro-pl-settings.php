@@ -114,7 +114,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 				 * There is only one, but use a loop because we do not know what
 				 * the array key is.
 				 */
-				foreach( $temp_plugins as $plugin_basename => $plugin_data ) {
+				foreach ( $temp_plugins as $plugin_basename => $plugin_data ) {
 
 					// Save this plugin's version number in the attachment post meta.
 					if ( ! empty( $plugin_data['Version'] ) ) {
