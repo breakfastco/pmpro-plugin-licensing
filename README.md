@@ -10,9 +10,10 @@ WordPress plugin. Add-on for Paid Memberships Pro. Sells WordPress plugins &amp;
 
 ## TODO
 
-- [ ] When the .zip is uploaded to the store, extract the readme.txt and stash the values in meta fields on the attachment
-- [ ] Add an updater to more-notification-types from akamaiwp.breakfastco.xyz store, later to be changed to main site.
+- [X] Manually give myself a membership, no license key generated in user meta.
+- [ ] Add an updater to more-notification-types from breakfastco.xyz store, launch the thing and get updates to a local site
 - [ ] replace button isn't immediately added when choose zip file
+- [ ] List, add & remove active sites when I click "5 sites"
 - [ ] Buy PMPro. Buy that membership with a customer account and find the .zip downloads and license key
 - [ ] Clone the settings page banner CSS so a PMPro redesign does not break my tab, this looks good https://www.linode.com/support/contact/
 - [ ] Build active/valid license check into settings page and use a green check mark like Gravity Wiz
