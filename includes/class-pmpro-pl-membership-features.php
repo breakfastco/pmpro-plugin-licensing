@@ -15,6 +15,11 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 	 * @since 0.1.0
 	 */
 	class PMPRO_PL_Membership_Features {
+		/**
+		 * Constructor.
+		 *
+		 * @since 0.1.0
+		 */
 		public function __construct() {
 			// Add hooks.
 			$this->add_hooks();
@@ -40,15 +45,14 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			add_action( 'wp_enqueue_scripts', array( $this, 'membership_account_register_scripts' ) );
 
 			// TODO filter this to protect Membership files.
-			//$hasaccess = apply_filters("pmpro_has_membership_access_filter", $hasaccess, $mypost, $myuser, $post_membership_levels);
+			// $hasaccess = apply_filters("pmpro_has_membership_access_filter", $hasaccess, $mypost, $myuser, $post_membership_levels).
 		}
 
 		/**
-		 * Creates a unique license key for the user if they do not already have
-		 * one.
+		 * Generate and save a unique license key for a user if they don't already have one.
 		 *
-		 * @param int         $user_id ID of the user checking out.
-		 * @param MemberOrder $order The order to complete the checkout for.
+		 * @param int $user_id
+		 * @param string $context Optional. String to help make the key unique (e.g., order or level info).
 		 * @return void
 		 */
 		public function after_checkout_generate_license_key( $user_id, $order ) {
@@ -61,12 +65,12 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 				// Does this license key already exist?
 				global $wpdb;
 				$query_pattern = "SELECT user_id FROM `{$wpdb->prefix}usermeta` WHERE meta_key = %s and meta_value = %s LIMIT 1";
-				// @phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				// @phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared.
 				$key_exists = 0 < count( $wpdb->get_var( $wpdb->prepare( $query_pattern, $meta_key, $license_key ) ) ?? array() );
 				while ( $key_exists ) {
 					// Yes.
 					$license_key = md5( uniqid() );
-					// @phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+					// @phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared.
 					$key_exists = 0 < count( $wpdb->get_var( $wpdb->prepare( $query_pattern, $meta_key, $license_key ) ) ?? array() );
 				}
 				// Save it.
@@ -84,6 +88,13 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			);
 		}
 
+		/**
+		 * Shows users their downloads for a specific membership level.
+		 *
+		 * @since 0.1.0
+		 * @param object $level The membership level object.
+		 * @return void
+		 */
 		public function show_users_their_downloads( $level ) {
 			// Are threre any files associated with this membership level?
 			$level_meta_files = get_pmpro_membership_level_meta( (int) $level->id, 'plugin_licensing_files', true );
@@ -128,6 +139,12 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			<?php
 		}
 
+		/**
+		 * Shows users their license key on the account page.
+		 *
+		 * @since 0.1.0
+		 * @return void
+		 */
 		public function show_users_their_license_key() {
 			// Get the current user.
 			$user = wp_get_current_user();
