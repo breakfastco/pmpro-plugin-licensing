@@ -38,6 +38,8 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 
 			// Generate license keys during orders.
 			add_action( 'pmpro_after_checkout', array( $this, 'after_checkout_generate_license_key' ), 10, 2 );
+			// Generate license keys when users are manually assigned to memberships.
+			add_action( 'pmpro_after_change_membership_level', array( $this, 'after_membership_change_generate_license_key' ), 10, 3 );
 			// Display users' license keys to them on their account page.
 			add_action( 'pmpro_account_bullets_bottom', array( $this, 'show_users_their_license_key' ) );
 			// Display file downloads associated with membership levels on user account page.
@@ -55,14 +57,13 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 		 * @param string $context Optional. String to help make the key unique (e.g., order or level info).
 		 * @return void
 		 */
-		public function after_checkout_generate_license_key( $user_id, $order ) {
+		private function maybe_generate_license_key_for_user( $user_id, $context = '' ) {
 			$meta_key = 'pmpro_plugin_licensing_license_key';
-			// Does this user have a license key?
 			$license_key = get_user_meta( $user_id, $meta_key, true );
 			if ( empty( $license_key ) ) {
 				// No. Generate one.
-				$license_key = md5( wp_json_encode( $order ) );
-				// Does this license key already exist?
+				$license_key = md5( uniqid() . $user_id . $context );
+				// Does this license key already exist?.
 				global $wpdb;
 				$query_pattern = "SELECT user_id FROM `{$wpdb->prefix}usermeta` WHERE meta_key = %s and meta_value = %s LIMIT 1";
 				// @phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared.
@@ -78,6 +79,38 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			}
 		}
 
+		public function after_checkout_generate_license_key( $user_id, $order ) {
+			// Get the user's current membership levels.
+			$levels = pmpro_getMembershipLevelsForUser( $user_id );
+			$has_files = false;
+			foreach ( $levels as $level ) {
+				$level_meta_files = get_pmpro_membership_level_meta( (int) $level->id, 'plugin_licensing_files', true );
+				if ( ! empty( $level_meta_files ) ) {
+					$has_files = true;
+					break;
+				}
+			}
+			if ( ! $has_files ) {
+				return;
+			}
+			$this->maybe_generate_license_key_for_user( $user_id, wp_json_encode( $order ) );
+		}
+
+		public function after_membership_change_generate_license_key( $level_id, $user_id, $cancel_level ) {
+			// Only generate a license key if this level has files associated with it.
+			$level_meta_files = get_pmpro_membership_level_meta( (int) $level_id, 'plugin_licensing_files', true );
+			if ( empty( $level_meta_files ) ) {
+				return;
+			}
+			$this->maybe_generate_license_key_for_user( $user_id, $level_id );
+		}
+
+		/**
+		 * Registers scripts and styles for the membership account page.
+		 *
+		 * @since 0.1.0
+		 * @return void
+		 */
 		public function membership_account_register_scripts() {
 			$min = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
 			wp_register_style(
