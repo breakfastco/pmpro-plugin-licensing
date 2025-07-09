@@ -157,12 +157,18 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 						}
 						$file = get_post( $attachment_id );
 
-						// TODO active sites.
+						// How many sites is this license + file active on?
+						$active_sites = get_user_meta( wp_get_current_user()->ID, 'pmpro_plugin_licensing_active_sites', true );
+						if ( empty( $active_sites ) ) {
+							$active_sites_count = 0;
+						} else {
+							$active_sites_count = count( $active_sites[ $hash ] ?? array() );
+						}
 						?>
 						<tr>
 							<td><a href="<?php echo esc_url( PMPRO_PL_Download_Links::create_download_link( $hash ) ); ?>" target="_blank"><?php echo esc_html( basename( $file->guid ) ); ?></a></td>
 							<td><?php echo esc_html( get_post_meta( $attachment_id, '_pmpro_pl_version', true ) ); ?></td>
-							<td><a>5 sites</a></td>
+							<td><a><?php /* translators: %s: number of active sites */ echo esc_html( sprintf( _n( '%s site', '%s sites', $active_sites_count, 'pmpro-plugin-licensing' ), $active_sites_count ) ); ?></a></td>
 						</tr>
 						<?php
 					}

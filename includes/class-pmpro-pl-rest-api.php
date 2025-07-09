@@ -70,10 +70,14 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				);
 			}
 
+			// Is the site requesting this file already among the active sites?
+			$user_id = pmpro_pl_get_user_id_from_license_key( $params['license'] );
+
 			// Is the license valid?
 			$license_check_args = array(
 				'license_key'   => $params['license'],
 				'attachment_id' => $attachment_id,
+				'user_id'       => $user_id,
 			);
 			if ( ! pmpro_pl_customer_license_is_valid( $license_check_args ) ) {
 				// Sorry, invalid license.
@@ -82,6 +86,38 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 					__( 'Request failed.' ),
 					array( 'status' => 401 )
 				);
+			}
+
+			if ( empty( $user_id ) ) {
+				// Sorry, license cannot be found associated with any user.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			// Is the site requesting this file already among the active sites?
+			// Get the referring URL from the request.
+			$referrer            = $request->get_header( 'referer' );
+			$site_already_active = false;
+			$active_sites        = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
+			if ( empty( $active_sites ) ) {
+				// No.
+				$site_already_active = false;
+			}
+
+			if ( is_array( $active_sites[ $hash ] ) && in_array( $referrer, $active_sites[ $hash ], true ) ) {
+				// Yes, this site is already active.
+				$site_already_active = true;
+			} else {
+				// No. Add it.
+				// TODO does this membership limit the active sites?
+				if ( ! is_array( $active_sites[ $hash ] ) ) {
+					$active_sites[ $hash ] = array();
+				}
+				$active_sites[ $hash ] = $referrer;
+				update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
 			}
 
 			$slug   = get_post_meta( $attachment_id, '_pmpro_pl_slug', true );
