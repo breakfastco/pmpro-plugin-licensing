@@ -334,14 +334,14 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 				'pmpro-pl-settings',
 				plugins_url( "assets/css/settings{$min}.css", PMPRO_PLUGIN_LICENSING_PATH ),
 				array(),
-				PMPRO_PLUGIN_LICENSING_VERISON
+				PMPRO_PLUGIN_LICENSING_VERSION
 			);
 
 			wp_register_script(
 				'pmpro-pl-settings',
 				plugins_url( "assets/js/settings{$min}.js", PMPRO_PLUGIN_LICENSING_PATH ),
 				array( 'wp-api', 'jquery' ),
-				PMPRO_PLUGIN_LICENSING_VERISON,
+				PMPRO_PLUGIN_LICENSING_VERSION,
 				true
 			);
 

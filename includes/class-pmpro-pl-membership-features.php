@@ -80,7 +80,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 				'pmpro-pl-account',
 				plugins_url( "assets/css/membership-account{$min}.css", PMPRO_PLUGIN_LICENSING_PATH ),
 				array(),
-				PMPRO_PLUGIN_LICENSING_VERISON
+				PMPRO_PLUGIN_LICENSING_VERSION
 			);
 		}
 

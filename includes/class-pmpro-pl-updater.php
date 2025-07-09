@@ -134,7 +134,7 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 
 			// $response = wp_remote_get( $this->get_store_url( '/wp-json/pmpro/v1/files?license=' . $license_key . '&file=' . $this->plugin_hash ) );
 			// $response_data = json_decode( wp_remote_retrieve_body( $response ) );
-			// if ( ! empty( $response_data->data->new_version ) && version_compare( $response_data->data->new_version, PMPRO_PLUGIN_LICENSING_VERISON, '>' ) ) {
+			// if ( ! empty( $response_data->data->new_version ) && version_compare( $response_data->data->new_version, PMPRO_PLUGIN_LICENSING_VERSION, '>' ) ) {
 			// 	$transient->response[ $plugin_slug ] = (object) array(
 			// 		'id'               => '',
 			// 		'slug'             => $response_data->data->slug, // This slug is in the View details link.

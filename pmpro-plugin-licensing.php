@@ -17,7 +17,7 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'PMPRO_PLUGIN_LICENSING_VERSION' ) ) {
-	define( 'PMPRO_PLUGIN_LICENSING_VERISON', '0.1.0' );
+	define( 'PMPRO_PLUGIN_LICENSING_VERSION', '0.1.0' );
 }
 if ( ! defined( 'PMPRO_PLUGIN_LICENSING_PATH' ) ) {
 	define( 'PMPRO_PLUGIN_LICENSING_PATH', __FILE__ );
