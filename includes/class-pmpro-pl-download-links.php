@@ -152,6 +152,10 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 					'attachment_id' => $attachment_id,
 				)
 			);
+			if ( ! $has_access ) {
+				wp_safe_redirect( site_url( '404.php' ) );
+				exit;
+			}
 
 			// Write the file to the response so the user gets a download.
 			$post = get_post( $attachment_id );
