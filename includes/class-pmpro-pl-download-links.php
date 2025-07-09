@@ -16,11 +16,11 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 	 */
 	class PMPRO_PL_Download_Links {
 
-		protected function query_var() {
+		protected static function query_var() {
 			return 'pmpro_pl_download';
 		}
 
-		protected function url_path() {
+		protected static function url_path() {
 			return 'membership-account/download/';
 		}
 
@@ -50,13 +50,13 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 		}
 
 		public function add_query_vars( $query_vars ) {
-			$query_vars[] = $this->query_var();
+			$query_vars[] = self::query_var();
 			return $query_vars;
 		}
 
 		public function add_rewrite_rules() {
-			$pattern = $this->url_path() . '([a-fA-F0-9]{32})/?$';
-			add_rewrite_rule( $pattern, 'index.php?' . $this->query_var() . '=$matches[1]', 'top' );
+			$pattern = self::url_path() . '([a-fA-F0-9]{32})/?$';
+			add_rewrite_rule( $pattern, 'index.php?' . self::query_var() . '=$matches[1]', 'top' );
 		}
 
 		/**
@@ -70,8 +70,8 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 				return '';
 			}
 
-			// https://example.com/membership-account/download/9c43f2e5857b1032374052dbfb8357b6
-			return site_url( $this->url_path() . $hash );
+			// https://example.com/membership-account/download/9c43f2e5857b1032374052dbfb8357b6.
+			return site_url( self::url_path() . $hash );
 		}
 
 		/**
@@ -109,7 +109,7 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 		 * @return void
 		 */
 		public function deliver_file_download() {
-			$hash = get_query_var( $this->query_var() );
+			$hash = get_query_var( self::query_var() );
 			if ( empty( $hash ) ) {
 				return;
 			}
@@ -135,7 +135,7 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 			$file_name = basename( $file_path );
 			if ( ! is_user_logged_in() ) {
 				// No. Redirect to login page with the file as a referrer.
-				wp_safe_redirect( wp_login_url( site_url( $this->url_path() . $file_name ) ) );
+				wp_safe_redirect( wp_login_url( site_url( self::url_path() . $file_name ) ) );
 				exit;
 			}
 
