@@ -190,7 +190,13 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 				return;
 			}
 			// Display it.
-			?><li class="<?php echo esc_attr( pmpro_get_element_class( 'pmpro_list_item' ) ); ?>"><strong><?php esc_html_e( 'License Key', 'paid-memberships-pro' ); ?>:</strong> <input type="text" readonly="readonly" id="pmpro_pl_license_key" value="<?php echo esc_attr( $license_key ); ?>" /><button type="button" class="pmpro_btn" onclick="javascript:document.querySelector('#pmpro_pl_license_key').select();document.execCommand('copy');">Copy</button></li><?php
+			?>
+			<li class="<?php echo esc_attr( pmpro_get_element_class( 'pmpro_list_item' ) ); ?>">
+				<strong><?php esc_html_e( 'License Key', 'paid-memberships-pro' ); ?>:</strong>
+				<input type="text" readonly="readonly" id="pmpro_pl_license_key" value="<?php echo esc_attr( $license_key ); ?>" />
+				<button type="button" class="pmpro_btn" onclick="javascript:document.querySelector('#pmpro_pl_license_key').select();document.execCommand('copy');">Copy</button>
+			</li>
+			<?php
 		}
 	}
 	new PMPRO_PL_Membership_Features();
