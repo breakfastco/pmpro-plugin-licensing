@@ -40,10 +40,44 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		}
 
 		/**
+		 * Handles REST requests for plugin readme.txt sections at
+		 * /wp-json/pmpro/v1/details. Users click links in the dashboard that
+		 * say, "View version x.x.x details" to see this information.
+		 *
+		 * @param  WP_REST_Request $request The request object.
+		 * @return array|WP_Error
+		 */
+		public function details_handler( $request ) {
+			$params = $request->get_params();
+
+			$hash          = $params['file'];
+			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
+			if ( 0 === $attachment_id ) {
+				// Sorry, invalid file.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			$meta = get_post_meta( $attachment_id );
+
+			$result = array(
+				'description'  => $meta['_pmpro_pl_description'][0] ?? '',
+				'installation' => $meta['_pmpro_pl_installation'][0] ?? '',
+				'faq'          => $meta['_pmpro_pl_faq'][0] ?? '',
+				'changelog'    => $meta['_pmpro_pl_changelog'][0] ?? '',
+			);
+
+			return $result;
+		}
+
+		/**
 		 * Handles REST requests for files at /wp-json/pmpro/v1/files.
 		 *
-		 * @param  mixed $request
-		 * @return void
+		 * @param  WP_REST_Request $request The request object.
+		 * @return array|WP_Error
 		 */
 		public function file_handler( $request ) {
 			$params = $request->get_params();
@@ -147,7 +181,7 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				'package'     => PMPRO_PL_Download_Links::create_download_link( $hash ),
 			);
 
-			wp_send_json_success( $result );
+			return $result;
 		}
 
 		public function register_routes() {
@@ -164,6 +198,19 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 						'methods'  => WP_REST_Server::READABLE,
 						'callback' => array( $this, 'file_handler' ),
 					),
+				)
+			);
+
+			/**
+			 * Get readme.txt sections to populate the "View version x.x.x details" link.
+			 * Example: https://example.com/wp-json/pmpro/v1/details?file=819c968aaf2dd92948ca159102ceafa5
+			 */
+			register_rest_route(
+				$rest_namespace,
+				'/details',
+				array(
+					'methods'  => WP_REST_Server::READABLE,
+					'callback' => array( $this, 'details_handler' ),
 				)
 			);
 		}
