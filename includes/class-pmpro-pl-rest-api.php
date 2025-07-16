@@ -130,6 +130,14 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			return $result;
 		}
 
+		/**
+		 * Checks if the site is already active and adds it if not.
+		 *
+		 * @param  string $hash The hash of the file.
+		 * @param  string $referrer The referring URL.
+		 * @param  int    $user_id The ID of the user.
+		 * @return bool True if the site is already active, false otherwise.
+		 */
 		public function maybe_add_active_site( $hash, $referrer, $user_id ) {
 			// Is the site requesting this file already among the active sites?
 			$site_is_active = false;
@@ -163,6 +171,11 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			return $site_is_active;
 		}
 
+		/**
+		 * Registers REST route to respond to update checks from customer sites.
+		 *
+		 * @return void
+		 */
 		public function register_routes() {
 			$rest_namespace = 'pmpro/v1';
 			/**
