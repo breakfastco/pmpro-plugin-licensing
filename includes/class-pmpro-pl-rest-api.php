@@ -99,12 +99,28 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 
 			// Is the site requesting this file already among the active sites?
 			// Get the referring URL from the request.
-			$referrer            = $request->get_header( 'referer' );
+			$referrer = $params['site'];
+			if ( empty( $referrer ) ) {
+				// No referrer.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, no referrer.' ),
+					array( 'status' => 401 )
+				);
+			}
 			$site_already_active = false;
 			$active_sites        = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
+			if ( ! is_array( $active_sites ) ) {
+				$active_sites = array();
+			}
+
 			if ( empty( $active_sites ) ) {
 				// No.
 				$site_already_active = false;
+			}
+
+			if ( ! is_array( $active_sites[ $hash ] ) ) {
+				$active_sites[ $hash ] = array();
 			}
 
 			if ( is_array( $active_sites[ $hash ] ) && in_array( $referrer, $active_sites[ $hash ], true ) ) {
@@ -116,7 +132,7 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				if ( ! is_array( $active_sites[ $hash ] ) ) {
 					$active_sites[ $hash ] = array();
 				}
-				$active_sites[ $hash ] = $referrer;
+				$active_sites[ $hash ][] = $referrer;
 				update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
 			}
 
