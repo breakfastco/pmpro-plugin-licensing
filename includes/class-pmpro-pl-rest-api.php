@@ -47,7 +47,8 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		 */
 		public function file_handler( $request ) {
 			$params = $request->get_params();
-			if ( empty( $params['file'] ) ) {
+			$hash   = $params['file'];
+			if ( empty( $hash ) ) {
 				// Return the same 404 as an invalid route.
 				return new WP_Error(
 					'rest_forbidden',
@@ -57,7 +58,6 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			}
 
 			// Get the latest version info from attachment meta.
-			$hash          = $params['file'];
 			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
 			if ( 0 === $attachment_id ) {
 				// Sorry, invalid file.
@@ -171,11 +171,16 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			 */
 			register_rest_route(
 				$rest_namespace,
-				'/files',
+				'/files/(?P<file>[a-zA-Z0-9]+)',
 				array(
 					array(
 						'methods'  => WP_REST_Server::READABLE,
 						'callback' => array( $this, 'file_handler' ),
+						'args'     => array(
+							'file' => array(
+								'required' => true,
+							),
+						),
 					),
 				)
 			);
