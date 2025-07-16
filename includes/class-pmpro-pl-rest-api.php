@@ -141,14 +141,9 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		public function maybe_add_active_site( $hash, $referrer, $user_id ) {
 			// Is the site requesting this file already among the active sites?
 			$site_is_active = false;
-			$active_sites        = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
+			$active_sites   = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
 			if ( ! is_array( $active_sites ) ) {
 				$active_sites = array();
-			}
-
-			if ( empty( $active_sites ) ) {
-				// No.
-				$site_is_active = false;
 			}
 
 			if ( ! is_array( $active_sites[ $hash ] ) ) {
