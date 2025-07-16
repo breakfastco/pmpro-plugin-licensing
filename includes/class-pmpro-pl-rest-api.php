@@ -16,16 +16,31 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 	 */
 	class PMPRO_PL_REST_API {
 
+		/**
+		 * Constructor.
+		 *
+		 * @return void
+		 */
 		public function __construct() {
 			// Add hooks.
 			$this->add_hooks();
 		}
 
+		/**
+		 * Adds hooks.
+		 *
+		 * @return void
+		 */
 		public function add_hooks() {
 			add_action( 'rest_api_init', array( $this, 'register_routes' ) );
 			add_action( 'init', array( $this, 'register_meta' ) );
 		}
 
+		/**
+		 * Registers meta.
+		 *
+		 * @return void
+		 */
 		public function register_meta() {
 			register_meta(
 				'post',
