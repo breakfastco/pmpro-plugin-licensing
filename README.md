@@ -11,7 +11,7 @@ WordPress plugin. Add-on for Paid Memberships Pro. Sells WordPress plugins &amp;
 ## TODO
 
 - [X] Manually give myself a membership, no license key generated in user meta.
-- [ ] Add an updater to more-notification-types from breakfastco.xyz store, launch the thing and get updates to a local site
+- [ ] Add an updater to pmpro-pl-sample-plugin from akamaiwp.breakfastco.xyz store
 - [ ] replace button isn't immediately added when choose zip file
 - [ ] List, add & remove active sites when I click "5 sites"
 - [ ] Buy PMPro. Buy that membership with a customer account and find the .zip downloads and license key
