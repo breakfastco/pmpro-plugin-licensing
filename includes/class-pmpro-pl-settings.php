@@ -267,13 +267,15 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 									<tr>
 										<th scope="row" valign="top"><label><?php esc_html_e( 'File', 'pmpro-plugin-licensing' ); ?></label></th>
 										<th scope="row" valign="top" class="file-hash"><?php esc_html_e( 'Hash', 'pmpro-plugin-licensing' ); ?></th>
+										<th scope="row" valign="top" class="file-version"><?php esc_html_e( 'Version', 'pmpro-plugin-licensing' ); ?></th>
 										<th scope="row" valign="top" class="file-remove"><?php esc_html_e( 'Remove', 'pmpro-plugin-licensing' ); ?></th>
 									</tr>
 								</thead>
 								<tbody>
 							<?php
 							foreach ( $level_meta_files as $hash => $attachment_id ) :
-								$file = get_post( $attachment_id );
+								$file      = get_post( $attachment_id );
+								$file_name = ( null !== $file ) ? basename( $file->guid ) : __( 'File not found!', 'pmpro-plugin-licensing' );
 								?>
 									<tr>
 										<td id="file_name_<?php echo esc_attr( $hash ); ?>" class="file-name">
@@ -285,7 +287,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 												printf(
 													'<a href="%s"><b>%s</b></a><button type="button" class="button file-attachment-replace" title="%s">%s</button>',
 													esc_url( wp_get_attachment_url( $attachment_id ) ),
-													esc_html( basename( $file->guid ) ),
+													esc_html( $file_name ),
 													esc_attr__( 'Replace the file associated with this hash', 'pmpro-plugin-licensing' ),
 													esc_html__( 'Replace', 'pmpro-plugin-licensing' )
 												);
