@@ -26,6 +26,7 @@ jQuery(document).ready(function($){
 						+ '<input type="text" readonly="readonly" class="file-hash" id="plugin_licensing_hash_' + response.data.hash + '" value="' + response.data.hash + '" />'
 						+ '\n<button type="button" class="button copy-hash" onclick="pmproPlCopyClipboard(\'plugin_licensing_hash_' + response.data.hash + '\');">Copy hash</button>'
 						+ '</td>'
+						+ '<td id="file_version_' + response.data.hash + '"></td>' // Version.
 						+ '<td>'
 						+ '<button type="button" class="button remove-file-attachment">Remove</button>'
 						+ '<input type="hidden" name="plugin_licensing_files[' + response.data.hash + '] id="plugin_licensing_file_' + response.data.hash + '" value="">'
@@ -114,15 +115,9 @@ function pmproPlAddClickHanders() {
 	jQuery('.file-attachment-replace').on('click', function(e) {
 		/**
 		 * Launch the media modal so the user can select a file to replace. The
-		 * user is publishing a new version of the plugin sold with this
+		 * user is publishing a new version of a plugin sold with this
 		 * Membership Level.
 		 */
-		// Can't do this if they share a file frame variable.
-		// // If the media frame already exists, reopen it.
-		// if (pmpro_pl_file_frame) {
-		// 	pmpro_pl_file_frame.open();
-		// 	return;
-		// }
 
 		// Create the media frame.
 		pmpro_pl_file_frame = wp.media({
@@ -164,6 +159,8 @@ function pmproPlAddClickHanders() {
 			// Replace the old file name with the new file name. Keep the Replace button.
 			jQuery('#file_name_' + rowHash + ' a' ).remove();
 			jQuery('#file_name_' + rowHash ).prepend( '<a href="' + attachment.url + '"><b>' + attachment.filename + '</b></a>' );
+			// Clear the version. It's a hidden meta key and not in post.
+			jQuery('#file_version_' + rowHash).html( '' );
 			// Populate attachment ID into hidden form field.
 			jQuery('#plugin_licensing_file_' + rowHash).val( attachment.id );
 		});

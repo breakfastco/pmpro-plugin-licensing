@@ -302,6 +302,10 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 											<input type="text" readonly="readonly" class="file-hash" id="plugin_licensing_hash_<?php echo esc_attr( $hash ); ?>" value="<?php echo esc_attr( $hash ); ?>" />
 											<button type="button" class="button copy-hash" title="<?php esc_attr_e( 'Copy this hash to the clipboard', 'pmrpo-plugin-licensing' ); ?>" onclick="pmproPlCopyClipboard('plugin_licensing_hash_<?php echo esc_attr( $hash ); ?>');">Copy hash</button>
 										</td>
+										<td id="file_version_<?php echo esc_attr( $hash ); ?>">
+											<?php // Version. ?>
+											<?php echo esc_html( get_post_meta( $attachment_id, '_pmpro_pl_version', true ) ); ?>
+										</td>
 										<td>
 											<?php // Remove button. ?>
 											<button type="button" class="button remove-file-attachment" title="Remove this hash and file from this Membership Level">Remove</button>

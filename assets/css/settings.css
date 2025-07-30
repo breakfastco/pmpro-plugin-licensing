@@ -22,9 +22,7 @@ input.file-hash{
 	font-family: monospace;
 	width: 21em;
 }
-.form-table th.file-hash{
-	width: 290px;
-}
+.form-table th.file-version,
 .form-table th.file-remove{
 	width: 60px;
 }
