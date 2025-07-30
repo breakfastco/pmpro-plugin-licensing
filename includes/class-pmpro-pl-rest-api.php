@@ -161,11 +161,11 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				$active_sites = array();
 			}
 
-			if ( ! is_array( $active_sites[ $hash ] ) ) {
+			if ( ! isset( $active_sites[ $hash ] ) || ! is_array( $active_sites[ $hash ] ) ) {
 				$active_sites[ $hash ] = array();
 			}
 
-			if ( is_array( $active_sites[ $hash ] ) && in_array( $referrer, $active_sites[ $hash ], true ) ) {
+			if ( in_array( $referrer, $active_sites[ $hash ], true ) ) {
 				// Yes, this site is already active.
 				$site_is_active = true;
 			} else {
