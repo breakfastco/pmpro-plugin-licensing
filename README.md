@@ -11,7 +11,12 @@ WordPress plugin. Add-on for Paid Memberships Pro. Sells WordPress plugins &amp;
 ## TODO
 
 - [X] Manually give myself a membership, no license key generated in user meta.
-- [ ] Add an updater to pmpro-pl-sample-plugin from akamaiwp.breakfastco.xyz store
+- [X] Add an updater to pmpro-pl-sample-plugin from akamaiwp.breakfastco.xyz store
+- [X] Document how to force the update check and debug the respose from akamaiwp.breakfastco.xyz
+  `wp option delete _site_transient_update_plugins`
+  `wp option delete pmpro_pl_sample_plugin_update_response`
+- [X] Display extracted version number in the files table
+- [X] Put .org readme.txt to HTML logic in the extraction during upload
 - [ ] replace button isn't immediately added when choose zip file
 - [ ] List, add & remove active sites when I click "5 sites"
 - [ ] Buy PMPro. Buy that membership with a customer account and find the .zip downloads and license key
