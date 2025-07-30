@@ -23,6 +23,14 @@ if ( ! defined( 'PMPRO_PLUGIN_LICENSING_PATH' ) ) {
 	define( 'PMPRO_PLUGIN_LICENSING_PATH', __FILE__ );
 }
 
+/**
+ * Load dependencies. A library to parse plugin readme.txt files into HTML.
+ * michaelf/php-markdown 1.6.0 as specified at plugin-directory/libs.
+ *
+ * @link https://meta.trac.wordpress.org/browser/sites/trunk/wordpress.org/public_html/wp-content/plugins/plugin-directory/libs/michelf-php-markdown-1.6.0
+ */
+require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/vendor-prefixed/autoload.php';
+
 // Load our updater so users see pending updates for this plugin.
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-updater.php';
 $updater = PMPRO_PL_Updater::get_instance();
@@ -42,8 +50,22 @@ require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-
 // Create download links and deliver file downloads to customers.
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-download-links.php';
 
+/**
+ * This is plugin-directory/readme/class-parser.php.
+ *
+ * @link https://meta.trac.wordpress.org/browser/sites/trunk/wordpress.org/public_html/wp-content/plugins/plugin-directory/readme/class-parser.php
+ */
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-readme-parser.php';
+
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-api.php';
+
+// Classes used on .org to parse plugin readme.txt files into HTML.
+/**
+ * This is plugin-directory/class-markdown.php.
+ *
+ * @link https://meta.trac.wordpress.org/browser/sites/trunk/wordpress.org/public_html/wp-content/plugins/plugin-directory/class-markdown.php
+ */
+require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-markdown.php';
 
 // Flush rewrite rules when the plugin is activated.
 register_activation_hook( PMPRO_PLUGIN_LICENSING_PATH, 'pmpro_pl_flush_rewrite' );

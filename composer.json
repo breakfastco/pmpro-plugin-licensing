@@ -1,0 +1,53 @@
+{
+	"require": {
+		"michelf/php-markdown": "^1.6.0"
+	},
+	"require-dev": {
+		"brianhenryie/strauss": "^0.14.0"
+	},
+	"scripts": {
+		"strauss": [
+			"vendor/bin/strauss"
+		],
+		"post-install-cmd": [
+			"@strauss",
+			"rm -rf vendor/"
+		],
+		"post-update-cmd": [
+			"@strauss",
+			"rm -rf vendor/"
+		]
+	},
+	"extra": {
+		"strauss": {
+			"target_directory": "vendor-prefixed",
+			"namespace_prefix": "Breakfast\\PMPRO_Plugin_Licensing\\",
+			"classmap_prefix": "Breakfast_PMPRO_PL_",
+			"constant_prefix": "PMPRO_PLUGIN_LICENSING_",
+			"packages": [
+			],
+			"override_autoload": {
+			},
+			"exclude_from_copy": {
+				"packages": [
+				],
+				"namespaces": [
+				],
+				"file_patterns": [
+				]
+			},
+			"exclude_from_prefix": {
+				"packages": [
+				],
+				"namespaces": [
+				],
+				"file_patterns": [
+				]
+			},
+			"namespace_replacement_patterns" : {
+			},
+			"delete_vendor_packages": false,
+			"delete_vendor_files": false
+		}
+	}
+}

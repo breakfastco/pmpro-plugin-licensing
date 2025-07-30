@@ -1,13 +1,17 @@
 <?php
-// I commented this out because I don't know where this class lives. No markdown support.
-//use WordPressdotorg\Plugin_Directory\Markdown;
+/**
+ * WordPress.org Plugin Readme Parser.
+ *
+ * Uses PMPRO_PL_Markdown instead of WordPressdotorg\Plugin_Directory\Markdown.
+ *
+ * @package pmpro-plugin-licensing
+ * @link https://meta.trac.wordpress.org/browser/sites/trunk/wordpress.org/public_html/wp-content/plugins/plugin-directory/readme/class-parser.php
+ */
 
 /**
  * WordPress.org Plugin Readme Parser.
  *
  * Based on Baikonur_ReadmeParser from https://github.com/rmccue/WordPress-Readme-Parser
- *
- * @package pmpro-plugin-licensing
  */
 class PMPRO_PL_Readme_Parser {
 
@@ -738,16 +742,15 @@ class PMPRO_PL_Readme_Parser {
 	 * @return string
 	 */
 	protected function parse_markdown( $text ) {
-		// static $markdown = null;
+		static $markdown = null;
 
-		// if ( is_null( $markdown ) ) {
-		// 	$markdown = new Markdown();
-		// }
+		if ( is_null( $markdown ) ) {
+			// This is the original class from plugin-directory.
+			//$markdown = new Markdown();
+			$markdown = new PMPRO_PL_Markdown();
+		}
 
-		// return $markdown->transform( $text );
-
-		// Nope, sorry. No markdown support.
-		return $text;
+		return $markdown->transform( $text );
 	}
 
 	/**
