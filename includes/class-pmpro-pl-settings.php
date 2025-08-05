@@ -86,7 +86,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			foreach ( $level_meta_files as $hash => $post_id ) {
 
 				// Is it a zip file?
-				$mime_type = get_post_mime_type( $post_id );
+				$attachment_post = get_post( $post_id );
+				$mime_type       = $attachment_post->post_mime_type;
 				if ( 'application/zip' !== $mime_type ) {
 					// No.
 					return;
@@ -126,6 +127,16 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 						update_post_meta( $post_id, '_pmpro_pl_slug', $plugin_basename );
 					}
 
+					// These come from the root PHP file magic header comment.
+					update_post_meta( $post_id, '_pmpro_pl_homepage', $plugin_data['PluginURI'] );
+					update_post_meta( $post_id, '_pmpro_pl_author', $plugin_data['Author'] );
+					update_post_meta( $post_id, '_pmpro_pl_author_profile', $plugin_data['AuthorURI'] );
+
+					// Media Library upload date of the plugin .zip file.
+					if ( $attachment_post ) {
+						update_post_meta( $post_id, '_pmpro_pl_last_updated', $attachment_post->post_date );
+					}
+
 					/**
 					 * Need to readme.txt data so the REST API can it available
 					 * to customer sites. Stash the description, installation
@@ -136,6 +147,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 					update_post_meta( $post_id, '_pmpro_pl_installation', $parser->sections['installation'] ?? '' );
 					update_post_meta( $post_id, '_pmpro_pl_faq', $parser->sections['faq'] ?? '' );
 					update_post_meta( $post_id, '_pmpro_pl_changelog', $parser->sections['changelog'] ?? '' );
+					update_post_meta( $post_id, '_pmpro_pl_name', $parser->name ?? '' );
+					update_post_meta( $post_id, '_pmpro_pl_tested', $parser->tested ?? '' );
 				}
 
 				// Delete the temp folder.

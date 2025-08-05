@@ -124,18 +124,27 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 
 			$meta   = get_post_meta( $attachment_id );
 			$result = array(
-				'icons'       => array(
+				'icons'          => array(
 					'default' => plugins_url( 'assets/icon.png', PMPRO_PLUGIN_LICENSING_PATH ),
 				),
-				'slug'        => $meta['_pmpro_pl_slug'][0] ?? '', // This slug is in the View details link.
-				'plugin'      => $meta['_pmpro_pl_slug'][0] ?? '',
-				'new_version' => $meta['_pmpro_pl_version'][0] ?? '',
-				'sections'    => array(
+				'slug'           => $meta['_pmpro_pl_slug'][0] ?? '', // This slug is in the View details link.
+				'plugin'         => $meta['_pmpro_pl_slug'][0] ?? '',
+				'new_version'    => $meta['_pmpro_pl_version'][0] ?? '',
+
+				// More stuff that's unlike the .org API responses.
+				'sections'       => array(
 					'description'  => $meta['_pmpro_pl_description'][0] ?? '',
 					'installation' => $meta['_pmpro_pl_installation'][0] ?? '',
 					'faq'          => $meta['_pmpro_pl_faq'][0] ?? '',
 					'changelog'    => $meta['_pmpro_pl_changelog'][0] ?? '',
 				),
+
+				'name'           => $meta['_pmpro_pl_name'][0] ?? '',
+				'homepage'       => $meta['_pmpro_pl_homepage'][0] ?? '',
+				'author'         => $meta['_pmpro_pl_author'][0] ?? '',
+				'author_profile' => $meta['_pmpro_pl_author_profile'][0] ?? '',
+				'tested'         => $meta['_pmpro_pl_tested'][0] ?? '',
+				'last_updated'   => $meta['_pmpro_pl_last_updated'][0] ?? '',
 			);
 
 			if ( $include_package ) {
