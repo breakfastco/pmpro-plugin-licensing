@@ -330,7 +330,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 										</td>
 										<td>
 											<?php // Remove button. ?>
-											<button type="button" class="button remove-file-attachment" title="Remove this hash and file from this Membership Level">Remove</button>
+											<button type="button" class="button remove-file-attachment" title="<?php esc_attr_e( 'Remove this hash and file from this Membership Level', 'pmpro-plugin-licensing' ); ?>"><?php esc_html_e( 'Remove', 'pmpro-plugin-licensing' ); ?></button>
 											<input type="hidden" name="plugin_licensing_files[<?php echo esc_attr( $hash ); ?>]"  id="plugin_licensing_file_<?php echo esc_attr( $hash ); ?>" value="<?php echo esc_attr( $attachment_id ); ?>">
 										</td>
 									</tr>
