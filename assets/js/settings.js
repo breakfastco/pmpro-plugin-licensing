@@ -27,7 +27,9 @@ jQuery(document).ready(function($){
 						+ '\n<button type="button" class="button copy-hash" onclick="pmproPlCopyClipboard(\'plugin_licensing_hash_' + response.data.hash + '\');">Copy hash</button>'
 						+ '</td>'
 						+ '<td id="file_version_' + response.data.hash + '"></td>' // Version.
-						+ '<td>'
+						+ '<td>' // Activation limit.
+						+ '<input type="number" class="file-activation-limit" title="The number of sites this plugin can be activated. Leave empty for unlimited." name="plugin_licensing_limits[' + response.data.hash + ']"  value="" />'
+						+ '</td>'
 						+ '<button type="button" class="button remove-file-attachment">Remove</button>'
 						+ '<input type="hidden" name="plugin_licensing_files[' + response.data.hash + '] id="plugin_licensing_file_' + response.data.hash + '" value="">'
 						+ '</td>'

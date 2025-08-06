@@ -164,11 +164,12 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 						} else {
 							$active_sites_count = count( $active_sites[ $hash ] ?? array() );
 						}
+						$sites_link = pmpro_url( 'account' ) . 'sites/?hash=' . $hash;
 						?>
 						<tr>
 							<td><a href="<?php echo esc_url( PMPRO_PL_Download_Links::create_download_link( $hash ) ); ?>" target="_blank"><?php echo esc_html( basename( $file->guid ) ); ?></a></td>
 							<td><?php echo esc_html( get_post_meta( $attachment_id, '_pmpro_pl_version', true ) ); ?></td>
-							<td><a><?php /* translators: %s: number of active sites */ echo esc_html( sprintf( _n( '%s site', '%s sites', $active_sites_count, 'pmpro-plugin-licensing' ), $active_sites_count ) ); ?></a></td>
+							<td><a href="<?php echo esc_url( $sites_link ); ?>"><?php /* translators: %s: number of active sites */ echo esc_html( sprintf( _n( '%s site', '%s sites', $active_sites_count, 'pmpro-plugin-licensing' ), $active_sites_count ) ); ?></a></td>
 						</tr>
 						<?php
 					}

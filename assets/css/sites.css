@@ -1,0 +1,59 @@
+/**
+ * Styles for the [pmpro_pl_sites] shortcode.
+ */
+
+.pmpro-pl-sites {
+	margin: 1em 0;
+}
+
+.pmpro_pl_site_url {
+	font-family: monospace;
+	font-size: 0.9em;
+	color: var(--theme-text-color, #333);
+}
+
+.pmpro_pl_add_site_form {
+	margin-top: 1.5em;
+	padding-top: 1.5em;
+	border-top: 1px solid var(--theme-form-field-border-initial-color, #ddd);
+}
+
+.pmpro_pl_add_site_form .pmpro_form_field {
+	display: flex;
+	gap: 0.5em;
+}
+
+.pmpro_pl_add_site_form .pmpro_form_label {
+	margin-bottom: 0.5em;
+}
+
+.pmpro_pl_add_site_form input[type="url"] {
+	flex: 1;
+}
+
+.pmpro_pl_add_site_form .pmpro_btn-add-site {
+	white-space: nowrap;
+}
+
+.pmpro_pl_no_sites {
+	color: var(--theme-text-color, #666);
+	font-style: italic;
+}
+
+.pmpro_pl_message {
+	margin-bottom: 1em;
+	padding: 0.75em 1em;
+	border-radius: var(--theme-form-field-border-radius, 3px);
+}
+
+.pmpro_pl_message.pmpro_error {
+	background-color: #f8d7da;
+	border: 1px solid #f5c6cb;
+	color: #721c24;
+}
+
+.pmpro_pl_message.pmpro_success {
+	background-color: #d4edda;
+	border: 1px solid #c3e6cb;
+	color: #155724;
+}

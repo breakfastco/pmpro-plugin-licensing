@@ -237,12 +237,14 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			if ( isset( $_POST['plugin_licensing_files'] ) ) {
 				$level_meta_files = array_map( 'intval', (array) $_POST['plugin_licensing_files'] );
 				update_pmpro_membership_level_meta( $level_id, 'plugin_licensing_files', $level_meta_files );
-				// Store the hash in each file's post meta.
 				foreach ( $level_meta_files as $hash => $attachment_id ) {
 					if ( 0 === $attachment_id ) {
 						continue;
 					}
+					// Store the hash in each file's post meta.
 					update_post_meta( $attachment_id, 'pmpro_pl_hash', $hash );
+					// Store the activation limit in each file's post meta.
+					update_post_meta( $attachment_id, '_pmpro_pl_activation_limit', $_POST['plugin_licensing_limits'][ $hash ] );
 				}
 			} else {
 				// User erased all downloads from this level.
@@ -281,6 +283,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 										<th scope="row" valign="top"><label><?php esc_html_e( 'File', 'pmpro-plugin-licensing' ); ?></label></th>
 										<th scope="row" valign="top" class="file-hash"><?php esc_html_e( 'Hash', 'pmpro-plugin-licensing' ); ?></th>
 										<th scope="row" valign="top" class="file-version"><?php esc_html_e( 'Version', 'pmpro-plugin-licensing' ); ?></th>
+										<th scope="row" valign="top" class="file-activation-limit"><?php esc_html_e( 'Activation Limit', 'pmpro-plugin-licensing' ); ?></th>
 										<th scope="row" valign="top" class="file-remove"><?php esc_html_e( 'Remove', 'pmpro-plugin-licensing' ); ?></th>
 									</tr>
 								</thead>
@@ -320,6 +323,10 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 										<td id="file_version_<?php echo esc_attr( $hash ); ?>">
 											<?php // Version. ?>
 											<?php echo esc_html( get_post_meta( $attachment_id, '_pmpro_pl_version', true ) ); ?>
+										</td>
+										<td>
+											<?php // Activation limit. ?>
+											<input type="number" class="file-activation-limit" title="<?php esc_attr_e( 'The number of sites this plugin can be activated. Leave empty for unlimited.', 'pmpro-plugin-licensing' ); ?>" name="plugin_licensing_limits[<?php echo esc_attr( $hash ); ?>]"  value="<?php echo esc_attr( get_post_meta( $attachment_id, '_pmpro_pl_activation_limit', true ) ); ?>" />
 										</td>
 										<td>
 											<?php // Remove button. ?>
