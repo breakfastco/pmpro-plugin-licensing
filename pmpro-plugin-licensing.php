@@ -70,10 +70,6 @@ require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-
 // Load the shortcode to display a list of sites a user has activated a plugin on.
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/shortcodes/pmpro_pl_sites.php';
 
-// Add AJAX handlers for site management.
-add_action( 'wp_ajax_pmpro_pl_add_site', 'pmpro_pl_ajax_add_site' );
-add_action( 'wp_ajax_pmpro_pl_remove_site', 'pmpro_pl_ajax_remove_site' );
-
 // Flush rewrite rules when the plugin is activated.
 register_activation_hook( PMPRO_PLUGIN_LICENSING_PATH, 'pmpro_pl_flush_rewrite' );
 /**
@@ -101,108 +97,6 @@ function pmpro_pl_flush_rewrite( $network_wide ) {
 		$wp_rewrite->flush_rules();
 		restore_current_blog();
 	}
-}
-
-/**
- * AJAX handler for adding a site to a user's license.
- */
-function pmpro_pl_ajax_add_site() {
-	// Verify nonce.
-	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'pmpro_pl_sites_nonce' ) ) {
-		wp_send_json_error( array( 'message' => __( 'Security check failed.', 'pmpro-plugin-licensing' ) ) );
-	}
-
-	// Get and sanitize parameters.
-	$hash = isset( $_POST['hash'] ) ? sanitize_text_field( wp_unslash( $_POST['hash'] ) ) : '';
-	$site_url = isset( $_POST['site_url'] ) ? esc_url_raw( wp_unslash( $_POST['site_url'] ) ) : '';
-	$user_id = isset( $_POST['user_id'] ) ? intval( $_POST['user_id'] ) : 0;
-
-	// Verify the current user can modify this user's data.
-	if ( get_current_user_id() !== $user_id ) {
-		wp_send_json_error( array( 'message' => __( 'You can only modify your own sites.', 'pmpro-plugin-licensing' ) ) );
-	}
-
-	// Validate URL.
-	if ( empty( $site_url ) ) {
-		wp_send_json_error( array( 'message' => __( 'Please provide a valid site URL.', 'pmpro-plugin-licensing' ) ) );
-	}
-
-	// Get the activation limit for this hash.
-	$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
-	if ( ! $attachment_id ) {
-		wp_send_json_error( array( 'message' => __( 'Invalid plugin hash.', 'pmpro-plugin-licensing' ) ) );
-	}
-
-	$activation_limit = (int) get_post_meta( $attachment_id, '_pmpro_pl_activation_limit', true );
-
-	// Get current active sites.
-	$active_sites = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
-	if ( ! is_array( $active_sites ) ) {
-		$active_sites = array();
-	}
-
-	if ( ! isset( $active_sites[ $hash ] ) ) {
-		$active_sites[ $hash ] = array();
-	}
-
-	// Check if site is already active.
-	if ( in_array( $site_url, $active_sites[ $hash ], true ) ) {
-		wp_send_json_error( array( 'message' => __( 'This site is already active for this plugin.', 'pmpro-plugin-licensing' ) ) );
-	}
-
-	// Check if user has reached the limit.
-	if ( $activation_limit > 0 && count( $active_sites[ $hash ] ) >= $activation_limit ) {
-		wp_send_json_error( array( 'message' => __( 'You have reached the maximum number of active sites for this plugin.', 'pmpro-plugin-licensing' ) ) );
-	}
-
-	// Add the site.
-	$active_sites[ $hash ][] = $site_url;
-	update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
-
-	wp_send_json_success();
-}
-
-/**
- * AJAX handler for removing a site from a user's license.
- */
-function pmpro_pl_ajax_remove_site() {
-	// Verify nonce.
-	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), 'pmpro_pl_sites_nonce' ) ) {
-		wp_send_json_error( array( 'message' => __( 'Security check failed.', 'pmpro-plugin-licensing' ) ) );
-	}
-
-	// Get and sanitize parameters.
-	$hash = isset( $_POST['hash'] ) ? sanitize_text_field( wp_unslash( $_POST['hash'] ) ) : '';
-	$site_url = isset( $_POST['site_url'] ) ? esc_url_raw( wp_unslash( $_POST['site_url'] ) ) : '';
-	$user_id = isset( $_POST['user_id'] ) ? intval( $_POST['user_id'] ) : 0;
-
-	// Verify the current user can modify this user's data.
-	if ( get_current_user_id() !== $user_id ) {
-		wp_send_json_error( array( 'message' => __( 'You can only modify your own sites.', 'pmpro-plugin-licensing' ) ) );
-	}
-
-	// Get current active sites.
-	$active_sites = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
-	if ( ! is_array( $active_sites ) ) {
-		wp_send_json_error( array( 'message' => __( 'No active sites found.', 'pmpro-plugin-licensing' ) ) );
-	}
-
-	if ( ! isset( $active_sites[ $hash ] ) ) {
-		wp_send_json_error( array( 'message' => __( 'No active sites found for this plugin.', 'pmpro-plugin-licensing' ) ) );
-	}
-
-	// Remove the site.
-	$key = array_search( $site_url, $active_sites[ $hash ], true );
-	if ( false === $key ) {
-		wp_send_json_error( array( 'message' => __( 'Site not found in active sites list.', 'pmpro-plugin-licensing' ) ) );
-	}
-
-	unset( $active_sites[ $hash ][ $key ] );
-	$active_sites[ $hash ] = array_values( $active_sites[ $hash ] ); // Re-index array.
-
-	update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
-
-	wp_send_json_success();
 }
 
 // Delete an option during deactivation.
