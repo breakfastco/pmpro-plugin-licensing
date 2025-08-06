@@ -72,6 +72,32 @@ require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/shortcodes/pmpro_pl_site
 
 // Flush rewrite rules when the plugin is activated.
 register_activation_hook( PMPRO_PLUGIN_LICENSING_PATH, 'pmpro_pl_flush_rewrite' );
+
+// Create the membership-account/sites/ page if it does not exist.
+register_activation_hook( PMPRO_PLUGIN_LICENSING_PATH, 'pmpro_pl_create_sites_page' );
+/**
+ * Creates the membership-account/sites/ page if it does not exist.
+ *
+ * @return void
+ */
+function pmpro_pl_create_sites_page() {
+	if ( ! get_page_by_path( 'membership-account/sites' ) ) {
+		global $pmpro_pages;
+		wp_insert_post(
+			array(
+				'post_title'   => __( 'Sites', 'pmpro-plugin-licensing' ),
+				'post_content' => '<!-- wp:shortcode -->
+[pmpro_pl_sites]
+<!-- /wp:shortcode -->',
+				'post_name'    => 'sites',
+				'post_parent'  => $pmpro_pages['account'],
+				'post_status'  => 'publish',
+				'post_type'    => 'page',
+			)
+		);
+	}
+}
+
 /**
  * Flushes rewrite rules.
  *
