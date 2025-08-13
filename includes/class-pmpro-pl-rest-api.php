@@ -55,6 +55,145 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		}
 
 		/**
+		 * Handles REST requests for activating license keys.
+		 *
+		 * @param  WP_REST_Request $request The request object.
+		 * @return array|WP_Error
+		 */
+		public function activate_license( $request ) {
+			$params        = $request->get_params();
+			$hash          = $params['file'];
+			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
+			if ( 0 === $attachment_id ) {
+				// Sorry, invalid file.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid file.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			// Get the referring URL from the request.
+			$referrer = $params['site'];
+			if ( empty( $referrer ) ) {
+				// No referrer.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid referrer.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			// Is the license key associated with a user?
+			$license = $params['license'];
+			$user_id = pmpro_pl_get_user_id_from_license_key( $license );
+			if ( empty( $user_id ) ) {
+				// License key is not associated with a user.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid license key.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			// License is associated with a user. Check if it's valid.
+			$license_check_args = array(
+				'license_key'   => $license,
+				'attachment_id' => $attachment_id,
+				'user_id'       => $user_id,
+			);
+			// Is the license valid?
+			if ( ! pmpro_pl_customer_license_is_valid( $license_check_args ) ) {
+				// No.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid license key.' ),
+					array( 'status' => 401 )
+				);
+			}
+			// Yes.
+			// Is the site is already active or just activated?
+			if ( ! $this->maybe_add_active_site( $hash, $referrer, $user_id ) ) {
+				// No.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, activation limit reached.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			// License is valid and the site is active.
+			return array(
+				'status' => 'active',
+			);
+		}
+
+		/**
+		 * Handles REST requests for deactivating sites on license keys.
+		 *
+		 * @param  WP_REST_Request $request The request object.
+		 * @return array|WP_Error
+		 */
+		public function deactivate_license( $request ) {
+			$params        = $request->get_params();
+			$hash          = $params['file'];
+			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
+			if ( 0 === $attachment_id ) {
+				// Sorry, invalid file.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid file.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			// Get the referring URL from the request.
+			$referrer = $params['site'];
+			if ( empty( $referrer ) ) {
+				// No referrer.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid referrer.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			// Is the license key associated with a user?
+			$license = $params['license'];
+			$user_id = pmpro_pl_get_user_id_from_license_key( $license );
+			if ( empty( $user_id ) ) {
+				// License key is not associated with a user.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid license key.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			// License is associated with a user. Check if it's valid.
+			$license_check_args = array(
+				'license_key'   => $license,
+				'attachment_id' => $attachment_id,
+				'user_id'       => $user_id,
+			);
+			// Is the license valid?
+			if ( ! pmpro_pl_customer_license_is_valid( $license_check_args ) ) {
+				// No.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid license key.' ),
+					array( 'status' => 401 )
+				);
+			}
+			// Yes.
+			// Is the site is even active? Who cares.
+			$this->maybe_remove_active_site( $hash, $referrer, $user_id );
+			return array(
+				'status' => 'inactive',
+			);
+		}
+
+		/**
 		 * Handles REST requests for files at /wp-json/pmpro/v1/files.
 		 *
 		 * @param  WP_REST_Request $request The request object.
@@ -178,16 +317,49 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				// Yes, this site is already active.
 				$site_is_active = true;
 			} else {
-				// No. Add it.
-				// TODO does this membership limit the active sites?
-				if ( ! is_array( $active_sites[ $hash ] ) ) {
-					$active_sites[ $hash ] = array();
+				// No. Is there room to add it?
+				$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
+				$limit         = get_post_meta( $attachment_id, '_pmpro_pl_activation_limit', true );
+				if ( $limit > count( $active_sites[ $hash ] ) ) {
+					// Yes. Add it.
+					if ( ! is_array( $active_sites[ $hash ] ) ) {
+						$active_sites[ $hash ] = array();
+					}
+					$active_sites[ $hash ][] = $referrer;
+					update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
+					$site_is_active = true;
 				}
-				$active_sites[ $hash ][] = $referrer;
-				update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
+			}
+			return $site_is_active;
+		}
+
+		/**
+		 * Removes a site from the list of active sites.
+		 *
+		 * @param  string $hash The hash of the file.
+		 * @param  string $referrer The referring URL.
+		 * @param  int    $user_id The ID of the user.
+		 * @return void
+		 */
+		public function maybe_remove_active_site( $hash, $referrer, $user_id ) {
+			// Is the site requesting this file already among the active sites?
+			$site_is_active = false;
+			$active_sites   = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
+			if ( ! is_array( $active_sites ) ) {
+				// No active sites, we're done.
+				return;
 			}
 
-			return $site_is_active;
+			if ( ! isset( $active_sites[ $hash ] ) || ! is_array( $active_sites[ $hash ] ) ) {
+				// No active sites for this file, we're done.
+				return;
+			}
+
+			if ( in_array( $referrer, $active_sites[ $hash ], true ) ) {
+				// Yes, this site is active. Remove it.
+				$active_sites[ $hash ] = array_diff( $active_sites[ $hash ], array( $referrer ) );
+				update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
+			}
 		}
 
 		/**
@@ -198,18 +370,79 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		public function register_routes() {
 			$rest_namespace = 'pmpro/v1';
 			/**
-			 * Get user access for a specific post.
-			 * Example: https://example.com/wp-json/pmpro/v1/files
+			 * Route to check for updates.
+			 * Example: https://example.com/wp-json/pmpro/v1/files/xxx/?license=yyy&site=zzz
 			 */
 			register_rest_route(
 				$rest_namespace,
 				'/files/(?P<file>[a-zA-Z0-9]+)',
 				array(
 					array(
-						'methods'  => WP_REST_Server::READABLE,
+						'methods'  => WP_REST_Server::READABLE, // GET.
 						'callback' => array( $this, 'file_handler' ),
 						'args'     => array(
 							'file' => array(
+								'required' => true,
+							),
+							'site' => array(
+								'required' => true,
+							),
+						),
+					),
+				)
+			);
+
+			/**
+			 * Route to activate license keys.
+			 * Example: https://example.com/wp-json/pmpro/v1/activate?file=vvv&license=xxx&site=yyy
+			 *
+			 * @param WP_REST_Request $request The request object.
+			 * @return array|WP_Error
+			 */
+			register_rest_route(
+				$rest_namespace,
+				'/activate',
+				array(
+					array(
+						'methods'  => WP_REST_Server::CREATABLE, // POST.
+						'callback' => array( $this, 'activate_license' ),
+						'args'     => array(
+							'file' => array(
+								'required' => true,
+							),
+							'license' => array(
+								'required' => true,
+							),
+							'site'    => array(
+								'required' => true,
+							),
+						),
+					),
+				)
+			);
+
+			/**
+			 * Route to deactivate sites on a license key.
+			 * Example: https://example.com/wp-json/pmpro/v1/deactivate?file=vvv&license=xxx&site=yyy
+			 *
+			 * @param WP_REST_Request $request The request object.
+			 * @return array|WP_Error
+			 */
+			register_rest_route(
+				$rest_namespace,
+				'/deactivate',
+				array(
+					array(
+						'methods'  => WP_REST_Server::CREATABLE, // POST.
+						'callback' => array( $this, 'deactivate_license' ),
+						'args'     => array(
+							'file' => array(
+								'required' => true,
+							),
+							'license' => array(
+								'required' => true,
+							),
+							'site'    => array(
 								'required' => true,
 							),
 						),
