@@ -8,23 +8,39 @@ WordPress plugin. Add-on for Paid Memberships Pro. Sells WordPress plugins &amp;
 - Attach file downloads to membership levels so PMPro can sell plugins.
 - Issue license keys for the delivery of updates to active subscribers.
 
-## TODO
+## How to force the update check
 
-- [X] Manually give myself a membership, no license key generated in user meta.
-- [X] Add an updater to pmpro-pl-sample-plugin from akamaiwp.breakfastco.xyz store
-- [X] Document how to force the update check and debug the respose from akamaiwp.breakfastco.xyz
-  `wp option delete _site_transient_update_plugins`
-  `wp option delete pmpro_pl_sample_plugin_update_response`
-- [X] Display extracted version number in the files table
-- [X] Put .org readme.txt to HTML logic in the extraction during upload
-- [ ] replace button isn't immediately added when choose zip file
-- [ ] List, add & remove active sites when I click "5 sites"
+The first two are equivalent, it's a site option:
+
+1. `wp transient delete update_plugins --network `
+2. `wp option delete _site_transient_update_plugins `
+3. `wp option delete pmpro_pl_sample_plugin_update_response` This wipes out the API response for the sample plugin.
+
+### TODO License activation & update downloads
+
+- [X] Enable Updates plugin action link goes to license key management page
+- [ ] Build active/valid license check into settings page and use a green check mark like Gravity Wiz
+- [ ] Enable Updates should also show for expired license or inactive site
+- [ ] Does anything stop working besides updates with an invalid license?
+- [ ] Rewrite the updater based on the sample plugin updater, make it just usable by sample plugin
+
+### TODO Active sites
+
+- [ ] Make sure the list works by adding the sample plugin to another site
+- [ ] License checks add to the list unless the list is full, then they need a match
+- [ ] Admin can add sites beyond the limit
+
+### TODO File management
+
+- [ ] Replace button isn't immediately added when choose zip file
+- [ ] Protect downloads in our uploads folder from non-members
+
+### TODO misc housekeeping
+
 - [ ] Buy PMPro. Buy that membership with a customer account and find the .zip downloads and license key
 - [ ] Clone the settings page banner CSS so a PMPro redesign does not break my tab, this looks good https://www.linode.com/support/contact/
-- [ ] Build active/valid license check into settings page and use a green check mark like Gravity Wiz
-  - [ ] Fake a purchase
+- [ ] Fake a purchase
 - [X] Put .zip files uploaded through our modal in a specific /uploads subfolder
-- [ ] Protect downloads in our uploads folder from non-members
 
 ## Setup concerns
 
