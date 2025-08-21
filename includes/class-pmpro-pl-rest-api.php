@@ -86,7 +86,7 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				);
 			}
 
-			// Is the license key associated with a user?
+			// Is the license key valid/associated with a user?
 			$license = $params['license'];
 			$user_id = pmpro_pl_get_user_id_from_license_key( $license );
 			if ( empty( $user_id ) ) {
@@ -99,13 +99,15 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				);
 			}
 
+			// TODO check if the license is expired.
+
 			// License is associated with a user. Check if it's valid.
 			$license_check_args = array(
 				'license_key'   => $license,
 				'attachment_id' => $attachment_id,
 				'user_id'       => $user_id,
 			);
-			// Is the license valid?
+			// Is the license valid for the file the user is using it with?
 			if ( ! pmpro_pl_customer_license_is_valid( $license_check_args ) ) {
 				// No.
 				return new WP_REST_Response(
