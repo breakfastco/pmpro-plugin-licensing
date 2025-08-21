@@ -8,6 +8,13 @@ WordPress plugin. Add-on for Paid Memberships Pro. Sells WordPress plugins &amp;
 - Attach file downloads to membership levels so PMPro can sell plugins.
 - Issue license keys for the delivery of updates to active subscribers.
 
+### License statuses
+
+1. `invalid` not found in any user meta or the file cannot be found
+2. `expired` found/valid but customer no longer paying the bill
+3. `inactive` found/valid but this site cannot be activated or the license does not provide access to this file
+4. `active` found/valid and this site is in the active sites list
+
 ## How to force the update check
 
 The first two are equivalent, it's a site option:
@@ -19,7 +26,8 @@ The first two are equivalent, it's a site option:
 ### TODO License activation & update downloads
 
 - [X] Enable Updates plugin action link goes to license key management page
-- [ ] Build active/valid license check into settings page and use a green check mark like Gravity Wiz
+- [ ] Build active/valid license check REST endpoints + into settings page and use a green check mark like Gravity Wiz
+- [ ] // TODO check if the license is expired.
 - [ ] Enable Updates should also show for expired license or inactive site
 - [ ] Does anything stop working besides updates with an invalid license?
 - [ ] Rewrite the updater based on the sample plugin updater, make it just usable by sample plugin
