@@ -66,10 +66,11 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
 			if ( 0 === $attachment_id ) {
 				// Sorry, invalid file.
-				return new WP_Error(
-					'rest_forbidden',
-					__( 'Request failed, invalid file.' ),
-					array( 'status' => 401 )
+				return new WP_REST_Response(
+					array(
+						'status'  => 'invalid',
+						'message' => __( 'File not found.', 'pmpro-plugin-licensing' ),
+					)
 				);
 			}
 
@@ -77,10 +78,11 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			$referrer = $params['site'];
 			if ( empty( $referrer ) ) {
 				// No referrer.
-				return new WP_Error(
-					'rest_forbidden',
-					__( 'Request failed, invalid referrer.' ),
-					array( 'status' => 401 )
+				return new WP_REST_Response(
+					array(
+						'status'  => 'invalid',
+						'message' => __( 'Site not found.', 'pmpro-plugin-licensing' ),
+					)
 				);
 			}
 
@@ -89,10 +91,11 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			$user_id = pmpro_pl_get_user_id_from_license_key( $license );
 			if ( empty( $user_id ) ) {
 				// License key is not associated with a user.
-				return new WP_Error(
-					'rest_forbidden',
-					__( 'Request failed, invalid license key.' ),
-					array( 'status' => 401 )
+				return new WP_REST_Response(
+					array(
+						'status'  => 'invalid',
+						'message' => __( 'Account failure.', 'pmpro-plugin-licensing' ),
+					)
 				);
 			}
 
@@ -105,26 +108,31 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			// Is the license valid?
 			if ( ! pmpro_pl_customer_license_is_valid( $license_check_args ) ) {
 				// No.
-				return new WP_Error(
-					'rest_forbidden',
-					__( 'Request failed, invalid license key.' ),
-					array( 'status' => 401 )
+				return new WP_REST_Response(
+					array(
+						'status'  => 'invalid',
+						'message' => __( 'Validation failed.', 'pmpro-plugin-licensing' ),
+					)
 				);
 			}
 			// Yes.
 			// Is the site is already active or just activated?
 			if ( ! $this->maybe_add_active_site( $hash, $referrer, $user_id ) ) {
-				// No.
-				return new WP_Error(
-					'rest_forbidden',
-					__( 'Request failed, activation limit reached.' ),
-					array( 'status' => 401 )
+				// No. License is good but site limit reached.
+				return new WP_REST_Response(
+					array(
+						'status'  => 'inactive',
+						'message' => __( 'Activation failed.', 'pmpro-plugin-licensing' ),
+					)
 				);
 			}
 
 			// License is valid and the site is active.
-			return array(
-				'status' => 'active',
+			return new WP_REST_Response(
+				array(
+					'status'  => 'active',
+					'message' => '',
+				)
 			);
 		}
 
@@ -140,10 +148,11 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
 			if ( 0 === $attachment_id ) {
 				// Sorry, invalid file.
-				return new WP_Error(
-					'rest_forbidden',
-					__( 'Request failed, invalid file.' ),
-					array( 'status' => 401 )
+				return new WP_REST_Response(
+					array(
+						'status'  => 'invalid',
+						'message' => __( 'File not found.', 'pmpro-plugin-licensing' ),
+					)
 				);
 			}
 
@@ -151,10 +160,11 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			$referrer = $params['site'];
 			if ( empty( $referrer ) ) {
 				// No referrer.
-				return new WP_Error(
-					'rest_forbidden',
-					__( 'Request failed, invalid referrer.' ),
-					array( 'status' => 401 )
+				return new WP_REST_Response(
+					array(
+						'status'  => 'invalid',
+						'message' => __( 'Site not found.', 'pmpro-plugin-licensing' ),
+					)
 				);
 			}
 
@@ -163,10 +173,11 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			$user_id = pmpro_pl_get_user_id_from_license_key( $license );
 			if ( empty( $user_id ) ) {
 				// License key is not associated with a user.
-				return new WP_Error(
-					'rest_forbidden',
-					__( 'Request failed, invalid license key.' ),
-					array( 'status' => 401 )
+				return new WP_REST_Response(
+					array(
+						'status'  => 'invalid',
+						'message' => __( 'Account failure.', 'pmpro-plugin-licensing' ),
+					)
 				);
 			}
 
@@ -179,17 +190,21 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			// Is the license valid?
 			if ( ! pmpro_pl_customer_license_is_valid( $license_check_args ) ) {
 				// No.
-				return new WP_Error(
-					'rest_forbidden',
-					__( 'Request failed, invalid license key.' ),
-					array( 'status' => 401 )
+				return new WP_REST_Response(
+					array(
+						'status'  => 'invalid',
+						'message' => __( 'Validation failed.', 'pmpro-plugin-licensing' ),
+					)
 				);
 			}
 			// Yes.
 			// Is the site is even active? Who cares.
 			$this->maybe_remove_active_site( $hash, $referrer, $user_id );
-			return array(
-				'status' => 'inactive',
+			return new WP_REST_Response(
+				array(
+					'status'  => 'inactive',
+					'message' => '',
+				)
 			);
 		}
 
