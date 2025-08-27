@@ -34,7 +34,8 @@ function pmpro_pl_get_user_id_from_license_key( $license_key ) {
 
 /**
  * Determines whether a customer license key is valid for the file she is trying
- * to download.
+ * to download. Checks if the license is expired and if the file is attached to
+ * a membership level the user has access.
  *
  * @param  array $args Array with keys 'license_key', 'user_id', or 'attachment_id'. License key and attachment ID are required.
  * @return bool
