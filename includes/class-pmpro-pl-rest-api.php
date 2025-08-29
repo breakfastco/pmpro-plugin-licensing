@@ -61,65 +61,29 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		 * @return array|WP_Error
 		 */
 		public function activate_license( $request ) {
-			$params        = $request->get_params();
-			$hash          = $params['file'];
-			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
-			if ( 0 === $attachment_id ) {
-				// Sorry, invalid file.
-				return new WP_REST_Response(
-					array(
-						'status'  => 'invalid',
-						'message' => __( 'File not found.', 'pmpro-plugin-licensing' ),
-					)
-				);
-			}
-
-			// Get the referring URL from the request.
-			$referrer = $params['site'];
-			if ( empty( $referrer ) ) {
-				// No referrer.
-				return new WP_REST_Response(
-					array(
-						'status'  => 'invalid',
-						'message' => __( 'Site not found.', 'pmpro-plugin-licensing' ),
-					)
-				);
-			}
-
-			// Is the license key valid/associated with a user?
+			$params  = $request->get_params();
+			$hash    = $params['file'];
 			$license = $params['license'];
-			$user_id = pmpro_pl_get_user_id_from_license_key( $license );
-			if ( empty( $user_id ) ) {
-				// License key is not associated with a user.
-				return new WP_REST_Response(
-					array(
-						'status'  => 'invalid',
-						'message' => __( 'Account failure.', 'pmpro-plugin-licensing' ),
-					)
-				);
+
+			$status_array = $this->get_license_status_array( $license, $hash, $params['site'] );
+			switch ( $status_array['status'] ) {
+				case 'active':
+					// License is valid and the site is active.
+					return new WP_REST_Response(
+						array(
+							'status'  => 'active',
+							'message' => '',
+						)
+					);
+				case 'expired':
+				case 'invalid':
+					return new WP_REST_Response(
+						$status_array
+					);
 			}
 
-			// TODO check if the license is expired.
-
-			// License is associated with a user. Check if it's valid.
-			$license_check_args = array(
-				'license_key'   => $license,
-				'attachment_id' => $attachment_id,
-				'user_id'       => $user_id,
-			);
-			// Is the license valid for the file the user is using it with?
-			if ( ! pmpro_pl_customer_license_is_valid( $license_check_args ) ) {
-				// No.
-				return new WP_REST_Response(
-					array(
-						'status'  => 'invalid',
-						'message' => __( 'Validation failed.', 'pmpro-plugin-licensing' ),
-					)
-				);
-			}
-			// Yes.
 			// Is the site is already active or just activated?
-			if ( ! $this->maybe_add_active_site( $hash, $referrer, $user_id ) ) {
+			if ( ! $this->maybe_add_active_site( $hash, $params['site'], pmpro_pl_get_user_id_from_license_key( $license ) ) ) {
 				// No. License is good but site limit reached.
 				return new WP_REST_Response(
 					array(
@@ -310,6 +274,71 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			return $result;
 		}
 
+		public function get_license_status( $request ) {
+			$params = $request->get_params();
+			return new WP_REST_Response( $this->get_license_status_array( $params['license'], $params['file'], $params['site'] ) );
+		}
+
+		protected function get_license_status_array( $license, $hash, $referrer ) {
+			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
+			if ( 0 === $attachment_id ) {
+				// Sorry, invalid file.
+				return array(
+					'status'  => 'invalid',
+					'message' => __( 'File not found.', 'pmpro-plugin-licensing' ),
+				);
+			}
+
+			// Get the referring URL from the request.
+			if ( empty( $referrer ) ) {
+				// No referrer.
+				return array(
+					'status'  => 'invalid',
+					'message' => __( 'Site not found.', 'pmpro-plugin-licensing' ),
+				);
+			}
+
+			// Is the license key valid/associated with a user?
+			$user_id = pmpro_pl_get_user_id_from_license_key( $license );
+			if ( empty( $user_id ) ) {
+				// License key is not associated with a user.
+				return array(
+					'status'  => 'invalid',
+					'message' => __( 'Account failure.', 'pmpro-plugin-licensing' ),
+				);
+			}
+
+			// Check if license is expired or for other files.
+			$license_check_args = array(
+				'license_key'   => $license,
+				'attachment_id' => $attachment_id,
+				'user_id'       => $user_id,
+			);
+			// Is the license valid for the file the user is using it with?
+			if ( ! pmpro_pl_customer_license_is_valid( $license_check_args ) ) {
+				// No.
+				return array(
+					'status'  => 'expired',
+					'message' => __( 'License is expired or does not provide access to this file.', 'pmpro-plugin-licensing' ),
+				);
+			}
+
+			// Is the site already active?
+			if ( ! $this->site_is_active( $hash, $referrer, $user_id ) ) {
+				// No.
+				return array(
+					'status'  => 'inactive',
+					'message' => __( 'Activation failed.', 'pmpro-plugin-licensing' ),
+				);
+			}
+
+			// Looks good.
+			return array(
+				'status'  => 'active',
+				'message' => '',
+			);
+		}
+
 		/**
 		 * Checks if the site is already active and adds it if not.
 		 *
@@ -320,34 +349,47 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		 */
 		public function maybe_add_active_site( $hash, $referrer, $user_id ) {
 			// Is the site requesting this file already among the active sites?
-			$site_is_active = false;
-			$active_sites   = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
+			if ( $this->site_is_active( $hash, $referrer, $user_id ) ) {
+				// Yes, this site is already active.
+				return true;
+			}
+
+			// No. Is there room to add it?
+			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
+			$limit         = get_post_meta( $attachment_id, '_pmpro_pl_activation_limit', true );
+			$active_sites  = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
 			if ( ! is_array( $active_sites ) ) {
 				$active_sites = array();
 			}
-
 			if ( ! isset( $active_sites[ $hash ] ) || ! is_array( $active_sites[ $hash ] ) ) {
 				$active_sites[ $hash ] = array();
 			}
-
-			if ( in_array( $referrer, $active_sites[ $hash ], true ) ) {
-				// Yes, this site is already active.
-				$site_is_active = true;
-			} else {
-				// No. Is there room to add it?
-				$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
-				$limit         = get_post_meta( $attachment_id, '_pmpro_pl_activation_limit', true );
-				if ( $limit > count( $active_sites[ $hash ] ) ) {
-					// Yes. Add it.
-					if ( ! is_array( $active_sites[ $hash ] ) ) {
-						$active_sites[ $hash ] = array();
-					}
-					$active_sites[ $hash ][] = $referrer;
-					update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
-					$site_is_active = true;
-				}
+			if ( $limit > count( $active_sites[ $hash ] ) ) {
+				// Yes. Add it.
+				$active_sites[ $hash ][] = $referrer;
+				update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
+				return true;
 			}
-			return $site_is_active;
+			return false;
+		}
+
+		/**
+		 * Determines whether the given site is already active for a file.
+		 *
+		 * @param  string $hash     The hash of the file.
+		 * @param  string $referrer The referring URL.
+		 * @param  int    $user_id  The ID of the user.
+		 * @return bool True when already active, false otherwise.
+		 */
+		public function site_is_active( $hash, $referrer, $user_id ) {
+			$active_sites = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
+			if ( ! is_array( $active_sites ) ) {
+				return false;
+			}
+			if ( ! isset( $active_sites[ $hash ] ) || ! is_array( $active_sites[ $hash ] ) ) {
+				return false;
+			}
+			return in_array( $referrer, $active_sites[ $hash ], true );
 		}
 
 		/**
@@ -454,6 +496,35 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 						'callback' => array( $this, 'deactivate_license' ),
 						'args'     => array(
 							'file' => array(
+								'required' => true,
+							),
+							'license' => array(
+								'required' => true,
+							),
+							'site'    => array(
+								'required' => true,
+							),
+						),
+					),
+				)
+			);
+
+			/**
+			 * Route to check a license key's status.
+			 * Example: https://example.com/wp-json/pmpro/v1/status?file=vvv&license=xxx&site=yyy
+			 *
+			 * @param WP_REST_Request $request The request object.
+			 * @return array|WP_Error
+			 */
+			register_rest_route(
+				$rest_namespace,
+				'/status',
+				array(
+					array(
+						'methods'  => WP_REST_Server::READABLE, // GET.
+						'callback' => array( $this, 'get_license_status' ),
+						'args'     => array(
+							'file'    => array(
 								'required' => true,
 							),
 							'license' => array(
