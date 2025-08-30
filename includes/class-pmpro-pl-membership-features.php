@@ -31,11 +31,6 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 		 * @return void
 		 */
 		public function add_hooks() {
-			// Only do this once.
-			if ( has_filter( 'pmpro_after_checkout', array( $this, 'after_checkout_generate_license_key' ), 10, 2 ) ) {
-				return;
-			}
-
 			// Generate license keys during orders.
 			add_action( 'pmpro_after_checkout', array( $this, 'after_checkout_generate_license_key' ), 10, 2 );
 			// Generate license keys when users are manually assigned to memberships.

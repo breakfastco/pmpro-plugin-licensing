@@ -26,11 +26,6 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 		 * @return void
 		 */
 		public function add_hooks() {
-			// Only do this once.
-			if ( has_filter( 'admin_menu', array( $this, 'add_settings_tab' ) ) ) {
-				return;
-			}
-
 			// Add a tab to the PMPro settings page.
 			add_action( 'admin_menu', array( $this, 'add_submenu' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'register_scripts' ) );

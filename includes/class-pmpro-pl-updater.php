@@ -51,11 +51,6 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 		protected $store_url = '';
 
 		public function add_hooks() {
-			// Only do this once.
-			if ( has_filter( 'pre_set_site_transient_update_plugins', array( $this, 'check_for_updates' ) ) ) {
-				return;
-			}
-
 			// Notify users when an update is available.
 			add_filter( 'pre_set_site_transient_update_plugins', array( $this, 'check_for_updates' ) );
 
