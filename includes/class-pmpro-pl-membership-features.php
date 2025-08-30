@@ -153,31 +153,26 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 				wp_send_json_error( array( 'message' => __( 'Invalid plugin hash.', 'pmpro-plugin-licensing' ) ) );
 			}
 
-			$activation_limit = (int) get_post_meta( $attachment_id, '_pmpro_pl_activation_limit', true );
-
-			// Get current active sites.
-			$active_sites = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
-			if ( ! is_array( $active_sites ) ) {
-				$active_sites = array();
-			}
-
-			if ( ! isset( $active_sites[ $hash ] ) ) {
-				$active_sites[ $hash ] = array();
-			}
-
-			// Check if site is already active.
-			if ( in_array( $site_url, $active_sites[ $hash ], true ) ) {
+			// Is the site already active?
+			$rest_api = PMPRO_PL_Rest_API::get_instance();
+			if ( $rest_api->site_is_active( $hash, $site_url, $user_id ) ) {
+				// Yes.
 				wp_send_json_error( array( 'message' => __( 'This site is already active for this plugin.', 'pmpro-plugin-licensing' ) ) );
 			}
 
+			$activation_limit = (int) get_post_meta( $attachment_id, '_pmpro_pl_activation_limit', true );
+
+			// Get current active sites.
+			$active_sites = $this->get_active_sites( $user_id, $hash );
+
 			// Check if user has reached the limit.
-			if ( $activation_limit > 0 && count( $active_sites[ $hash ] ) >= $activation_limit ) {
+			if ( $activation_limit > 0 && count( $active_sites ) >= $activation_limit ) {
 				wp_send_json_error( array( 'message' => __( 'You have reached the maximum number of active sites for this plugin.', 'pmpro-plugin-licensing' ) ) );
 			}
 
 			// Add the site.
-			$active_sites[ $hash ][] = $site_url;
-			update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
+			$active_sites[] = $site_url;
+			$this->set_active_sites( $user_id, $hash, $active_sites );
 
 			wp_send_json_success();
 		}
@@ -204,27 +199,34 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			}
 
 			// Get current active sites.
-			$active_sites = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
-			if ( ! is_array( $active_sites ) ) {
-				wp_send_json_error( array( 'message' => __( 'No active sites found.', 'pmpro-plugin-licensing' ) ) );
-			}
-
-			if ( ! isset( $active_sites[ $hash ] ) ) {
-				wp_send_json_error( array( 'message' => __( 'No active sites found for this plugin.', 'pmpro-plugin-licensing' ) ) );
-			}
+			$active_sites = $this->get_active_sites( $user_id, $hash );
 
 			// Remove the site.
-			$key = array_search( $site_url, $active_sites[ $hash ], true );
+			$key = array_search( $site_url, $active_sites, true );
 			if ( false === $key ) {
 				wp_send_json_error( array( 'message' => __( 'Site not found in active sites list.', 'pmpro-plugin-licensing' ) ) );
 			}
 
-			unset( $active_sites[ $hash ][ $key ] );
-			$active_sites[ $hash ] = array_values( $active_sites[ $hash ] ); // Re-index array.
+			unset( $active_sites[ $key ] );
+			$active_sites = array_values( $active_sites ); // Re-index array.
 
-			update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
-
+			$this->set_active_sites( $user_id, $hash, $active_sites );
 			wp_send_json_success();
+		}
+
+		/**
+		 * Gets the active sites for a user and hash.
+		 *
+		 * @param int    $user_id User ID who owns the license.
+		 * @param string $hash    File hash.
+		 * @return array
+		 */
+		public function get_active_sites( $user_id, $hash ) {
+			$active_sites = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
+			if ( ! is_array( $active_sites ) ) {
+				return array();
+			}
+			return $active_sites[ $hash ] ?? array();
 		}
 
 		/**
@@ -241,6 +243,23 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 				array(),
 				PMPRO_PLUGIN_LICENSING_VERSION
 			);
+		}
+
+		/**
+		 * Sets the active sites for a user and hash.
+		 *
+		 * @param int    $user_id User ID who owns the license.
+		 * @param string $hash    File hash.
+		 * @param array  $sites   List of active site URLs.
+		 * @return void
+		 */
+		public function set_active_sites( $user_id, $hash, $sites ) {
+			$active_sites = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
+			if ( ! is_array( $active_sites ) ) {
+				$active_sites = array();
+			}
+			$active_sites[ $hash ] = $sites;
+			update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
 		}
 
 		/**
@@ -280,13 +299,8 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 						$file = get_post( $attachment_id );
 
 						// How many sites is this license + file active on?
-						$active_sites = get_user_meta( wp_get_current_user()->ID, 'pmpro_plugin_licensing_active_sites', true );
-						if ( empty( $active_sites ) ) {
-							$active_sites_count = 0;
-						} else {
-							$active_sites_count = count( $active_sites[ $hash ] ?? array() );
-						}
-						$sites_link = pmpro_url( 'account' ) . 'sites/?hash=' . $hash;
+						$active_sites_count = count( $this->get_active_sites( wp_get_current_user()->ID, $hash ) );
+						$sites_link         = pmpro_url( 'account' ) . 'sites/?hash=' . $hash;
 						?>
 						<tr>
 							<td><a href="<?php echo esc_url( PMPRO_PL_Download_Links::create_download_link( $hash ) ); ?>" target="_blank"><?php echo esc_html( basename( $file->guid ) ); ?></a></td>
