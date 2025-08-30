@@ -65,14 +65,13 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 				$license_key = md5( uniqid() . $user_id . $context );
 				// Does this license key already exist?
 				global $wpdb;
-				$query_pattern = "SELECT user_id FROM `{$wpdb->prefix}usermeta` WHERE meta_key = %s and meta_value = %s LIMIT 1";
-				// @phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared.
-				$key_exists = 0 < count( $wpdb->get_var( $wpdb->prepare( $query_pattern, $meta_key, $license_key ) ) ?? array() );
+				$count = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(1) FROM {$wpdb->usermeta} WHERE meta_key = %s AND meta_value = %s", $meta_key, $license_key ) );
+				$key_exists = $count > 0;
 				while ( $key_exists ) {
 					// Yes.
 					$license_key = md5( uniqid() );
-					// @phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared.
-					$key_exists = 0 < count( $wpdb->get_var( $wpdb->prepare( $query_pattern, $meta_key, $license_key ) ) ?? array() );
+					$count      = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(1) FROM {$wpdb->usermeta} WHERE meta_key = %s AND meta_value = %s", $meta_key, $license_key ) );
+					$key_exists = $count > 0;
 				}
 				// Save it.
 				update_user_meta( $user_id, $meta_key, $license_key );
