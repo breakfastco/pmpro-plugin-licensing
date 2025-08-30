@@ -15,6 +15,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 	 * @since 0.1.0
 	 */
 	class PMPRO_PL_Membership_Features {
+
 		/**
 		 * Constructor.
 		 *
@@ -52,17 +53,17 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 		/**
 		 * Generate and save a unique license key for a user if they don't already have one.
 		 *
-		 * @param int $user_id
-		 * @param string $context Optional. String to help make the key unique (e.g., order or level info).
+		 * @param int    $user_id  User ID the license is for.
+		 * @param string $context  Optional. String to help make the key unique (e.g., order or level info).
 		 * @return void
 		 */
 		private function maybe_generate_license_key_for_user( $user_id, $context = '' ) {
-			$meta_key = 'pmpro_plugin_licensing_license_key';
+			$meta_key    = 'pmpro_plugin_licensing_license_key';
 			$license_key = get_user_meta( $user_id, $meta_key, true );
 			if ( empty( $license_key ) ) {
 				// No. Generate one.
 				$license_key = md5( uniqid() . $user_id . $context );
-				// Does this license key already exist?.
+				// Does this license key already exist?
 				global $wpdb;
 				$query_pattern = "SELECT user_id FROM `{$wpdb->prefix}usermeta` WHERE meta_key = %s and meta_value = %s LIMIT 1";
 				// @phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared.
@@ -78,9 +79,16 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			}
 		}
 
+		/**
+		 * Generate a license key after checkout if the user's levels include files.
+		 *
+		 * @param int    $user_id User ID who completed checkout.
+		 * @param object $order   The order object.
+		 * @return void
+		 */
 		public function after_checkout_generate_license_key( $user_id, $order ) {
 			// Get the user's current membership levels.
-			$levels = pmpro_getMembershipLevelsForUser( $user_id );
+			$levels    = pmpro_getMembershipLevelsForUser( $user_id );
 			$has_files = false;
 			foreach ( $levels as $level ) {
 				$level_meta_files = get_pmpro_membership_level_meta( (int) $level->id, 'plugin_licensing_files', true );
@@ -95,7 +103,17 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			$this->maybe_generate_license_key_for_user( $user_id, wp_json_encode( $order ) );
 		}
 
+		/**
+		 * Generate a license key when a user is manually assigned a membership level
+		 * that has files associated with it.
+		 *
+		 * @param int   $level_id      Membership level ID.
+		 * @param int   $user_id       User ID whose membership changed.
+		 * @param mixed $cancel_level  Level being cancelled (unused).
+		 * @return void
+		 */
 		public function after_membership_change_generate_license_key( $level_id, $user_id, $cancel_level ) {
+			unset( $cancel_level );
 			// Only generate a license key if this level has files associated with it.
 			$level_meta_files = get_pmpro_membership_level_meta( (int) $level_id, 'plugin_licensing_files', true );
 			if ( empty( $level_meta_files ) ) {
@@ -177,9 +195,9 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			}
 
 			// Get and sanitize parameters.
-			$hash = isset( $_POST['hash'] ) ? sanitize_text_field( wp_unslash( $_POST['hash'] ) ) : '';
+			$hash     = isset( $_POST['hash'] ) ? sanitize_text_field( wp_unslash( $_POST['hash'] ) ) : '';
 			$site_url = isset( $_POST['site_url'] ) ? esc_url_raw( wp_unslash( $_POST['site_url'] ) ) : '';
-			$user_id = isset( $_POST['user_id'] ) ? intval( $_POST['user_id'] ) : 0;
+			$user_id  = isset( $_POST['user_id'] ) ? intval( $_POST['user_id'] ) : 0;
 
 			// Verify the current user can modify this user's data.
 			if ( get_current_user_id() !== $user_id ) {

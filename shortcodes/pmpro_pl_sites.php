@@ -44,7 +44,7 @@ function shortcode_pmpro_pl_sites( $atts, $content = null, $code = '' ) {
 	$sites_for_hash = isset( $active_sites[ $hash ] ) ? $active_sites[ $hash ] : array();
 
 	// Get the activation limit for this hash.
-	$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
+	$attachment_id    = PMPRO_PL_Download_Links::find_attachment_id( $hash );
 	$activation_limit = 0;
 	if ( $attachment_id ) {
 		$activation_limit = (int) get_post_meta( $attachment_id, '_pmpro_pl_activation_limit', true );
