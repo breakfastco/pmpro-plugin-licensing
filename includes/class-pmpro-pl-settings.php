@@ -212,13 +212,24 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			return $wp_plugins;
 		}
 
+		/**
+		 * Ignores the year-month sub-directory. Uploaded plugin zip files
+		 * are always stored in wp-content/uploads/pmpro-plugin-licensing.
+		 *
+		 * @param  array $uploads Uploads directory information.
+		 * @return array
+		 */
 		public function maybe_change_upload_path( $uploads ) {
+			// Is a flag set telling us this is a Plugin Licensing upload?
 			if ( ! isset( $_POST['is_pmpro_pl'] ) ) {
 				return $uploads;
 			}
 
-			$uploads['path'] = self::upload_path( $uploads );
-			$uploads['url'] .= '/pmpro-plugin-licensing';
+			// Overwrite the path and URL that may contain year-months.
+			$directory       = '/pmpro-plugin-licensing';
+			$uploads['path'] = $uploads['basedir'] . $directory;
+			$uploads['url']  = $uploads['baseurl'] . $directory;
+
 			return $uploads;
 		}
 
@@ -459,13 +470,6 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 	</form>
 		</div>
 			<?php
-		}
-
-		public static function upload_path( $uploads = null ) {
-			if ( null === $uploads ) {
-				$uploads = wp_upload_dir();
-			}
-			return $uploads['path'] .= '/pmpro-plugin-licensing';
 		}
 	}
 	new PMPRO_PL_Settings();
