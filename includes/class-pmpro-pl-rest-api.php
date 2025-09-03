@@ -324,7 +324,7 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			}
 
 			// Is the site already active?
-			if ( ! $this->site_is_active( $hash, $referrer, $user_id ) ) {
+			if ( ! self::site_is_active( $hash, $referrer, $user_id ) ) {
 				// No.
 				return array(
 					'status'  => 'inactive',
@@ -349,7 +349,7 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		 */
 		public function maybe_add_active_site( $hash, $referrer, $user_id ) {
 			// Is the site requesting this file already among the active sites?
-			if ( $this->site_is_active( $hash, $referrer, $user_id ) ) {
+			if ( self::site_is_active( $hash, $referrer, $user_id ) ) {
 				// Yes, this site is already active.
 				return true;
 			}
@@ -381,7 +381,7 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		 * @param  int    $user_id  The ID of the user.
 		 * @return bool True when already active, false otherwise.
 		 */
-		public function site_is_active( $hash, $referrer, $user_id ) {
+		public static function site_is_active( $hash, $referrer, $user_id ) {
 			$active_sites = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
 			if ( ! is_array( $active_sites ) ) {
 				return false;

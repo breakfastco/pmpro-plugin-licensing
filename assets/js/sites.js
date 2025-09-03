@@ -52,7 +52,7 @@
 		}
 
 		// Check if we're at the limit.
-		if (pmpro_pl_sites.limit > 0 && pmpro_pl_sites.current >= pmpro_pl_sites.limit) {
+		if ( ! pmpro_pl_sites.can_manage_options && pmpro_pl_sites.limit > 0 && pmpro_pl_sites.current >= pmpro_pl_sites.limit) {
 			showMessage('You have reached the maximum number of active sites for this plugin.', 'error');
 			return;
 		}
@@ -86,7 +86,9 @@
 					updateSiteCount();
 					
 					// Check if we've reached the limit.
-					if (pmpro_pl_sites.limit > 0 && pmpro_pl_sites.current >= pmpro_pl_sites.limit) {
+					if ( ! pmpro_pl_sites.can_manage_options
+						&& pmpro_pl_sites.limit > 0
+						&& pmpro_pl_sites.current >= pmpro_pl_sites.limit ) {
 						hideAddSiteForm();
 					}
 					

@@ -52,7 +52,7 @@ function shortcode_pmpro_pl_sites( $atts, $content = null, $code = '' ) {
 
 	// Check if user has reached the limit.
 	$current_count = count( $sites_for_hash );
-	$can_add_sites = ( 0 === $activation_limit ) || ( $current_count < $activation_limit );
+	$can_add_sites = ( 0 === $activation_limit ) || ( $current_count < $activation_limit ) || current_user_can( 'manage_options' );
 
 	$min = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
 
@@ -72,18 +72,21 @@ function shortcode_pmpro_pl_sites( $atts, $content = null, $code = '' ) {
 		true
 	);
 
-	// Localize script with data.
-	wp_localize_script(
+	// Pass data to the script via an inline JSON config variable.
+	$data = array(
+		'ajaxurl' => admin_url( 'admin-ajax.php' ),
+		'nonce'   => wp_create_nonce( 'pmpro_pl_sites_nonce' ),
+		'hash'    => $hash,
+		'user_id' => $user->ID,
+		'can_manage_options' => current_user_can( 'manage_options' ),
+		'limit'   => $activation_limit,
+		'current' => $current_count,
+	);
+
+	wp_add_inline_script(
 		'pmpro-pl-sites',
-		'pmpro_pl_sites',
-		array(
-			'ajaxurl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( 'pmpro_pl_sites_nonce' ),
-			'hash'    => $hash,
-			'user_id' => $user->ID,
-			'limit'   => $activation_limit,
-			'current' => $current_count,
-		)
+		'const pmpro_pl_sites = ' . wp_json_encode( $data ) . ';',
+		'before'
 	);
 
 	ob_start();
@@ -101,7 +104,7 @@ function shortcode_pmpro_pl_sites( $atts, $content = null, $code = '' ) {
 										<?php
 										printf(
 											/* translators: 1. Opening <span> element. 2. Current number of sites. 3. Maximum number of sites. 4. Closing </span> element. */
-											esc_html__( 'You have activated this plugin on %1$s%2$d of %3$d%4$s sites.', 'pmpro-plugin-licensing' ),
+											esc_html__( 'This plugin is active on %1$s%2$d of %3$d%4$s sites.', 'pmpro-plugin-licensing' ),
 											'<span class="pmpro_pl_sites_count">',
 											esc_html( $current_count ),
 											esc_html( $activation_limit ),

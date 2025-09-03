@@ -154,8 +154,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			}
 
 			// Is the site already active?
-			$rest_api = PMPRO_PL_Rest_API::get_instance();
-			if ( $rest_api->site_is_active( $hash, $site_url, $user_id ) ) {
+			if ( PMPRO_PL_REST_API::site_is_active( $hash, $site_url, $user_id ) ) {
 				// Yes.
 				wp_send_json_error( array( 'message' => __( 'This site is already active for this plugin.', 'pmpro-plugin-licensing' ) ) );
 			}
@@ -166,7 +165,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			$active_sites = $this->get_active_sites( $user_id, $hash );
 
 			// Check if user has reached the limit.
-			if ( $activation_limit > 0 && count( $active_sites ) >= $activation_limit ) {
+			if ( ! current_user_can( 'manage_options' ) && $activation_limit > 0 && count( $active_sites ) >= $activation_limit ) {
 				wp_send_json_error( array( 'message' => __( 'You have reached the maximum number of active sites for this plugin.', 'pmpro-plugin-licensing' ) ) );
 			}
 
