@@ -69,13 +69,13 @@ function shortcode_pmpro_pl_sites( $atts, $content = null, $code = '' ) {
 
 	// Pass data to the script via an inline JSON config variable.
 	$data = array(
-		'ajaxurl' => admin_url( 'admin-ajax.php' ),
-		'nonce'   => wp_create_nonce( 'pmpro_pl_sites_nonce' ),
-		'hash'    => $hash,
-		'user_id' => $user->ID,
+		'ajaxurl'            => admin_url( 'admin-ajax.php' ),
+		'nonce'              => wp_create_nonce( 'pmpro_pl_sites_nonce' ),
+		'hash'               => $hash,
+		'user_id'            => $user->ID,
 		'can_manage_options' => current_user_can( 'manage_options' ),
-		'limit'   => $activation_limit,
-		'current' => $current_count,
+		'limit'              => $activation_limit,
+		'current'            => $current_count,
 	);
 
 	wp_add_inline_script(
