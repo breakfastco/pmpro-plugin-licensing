@@ -357,17 +357,11 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			// No. Is there room to add it?
 			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
 			$limit         = get_post_meta( $attachment_id, '_pmpro_pl_activation_limit', true );
-			$active_sites  = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
-			if ( ! is_array( $active_sites ) ) {
-				$active_sites = array();
-			}
-			if ( ! isset( $active_sites[ $hash ] ) || ! is_array( $active_sites[ $hash ] ) ) {
-				$active_sites[ $hash ] = array();
-			}
-			if ( $limit > count( $active_sites[ $hash ] ) ) {
+			$active_sites  = PMPRO_PL_Membership_Features::get_active_sites( $user_id, $hash );
+			if ( $limit > count( $active_sites ) ) {
 				// Yes. Add it.
-				$active_sites[ $hash ][] = $referrer;
-				update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
+				$active_sites[] = $referrer;
+				PMPRO_PL_Membership_Features::set_active_sites( $user_id, $hash, $active_sites );
 				return true;
 			}
 			return false;
@@ -382,14 +376,8 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		 * @return bool True when already active, false otherwise.
 		 */
 		public static function site_is_active( $hash, $referrer, $user_id ) {
-			$active_sites = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
-			if ( ! is_array( $active_sites ) ) {
-				return false;
-			}
-			if ( ! isset( $active_sites[ $hash ] ) || ! is_array( $active_sites[ $hash ] ) ) {
-				return false;
-			}
-			return in_array( $referrer, $active_sites[ $hash ], true );
+			$active_sites = PMPRO_PL_Membership_Features::get_active_sites( $user_id, $hash );
+			return in_array( $referrer, $active_sites, true );
 		}
 
 		/**
@@ -403,21 +391,16 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		public function maybe_remove_active_site( $hash, $referrer, $user_id ) {
 			// Is the site requesting this file already among the active sites?
 			$site_is_active = false;
-			$active_sites   = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
-			if ( ! is_array( $active_sites ) ) {
-				// No active sites, we're done.
-				return;
-			}
-
-			if ( ! isset( $active_sites[ $hash ] ) || ! is_array( $active_sites[ $hash ] ) ) {
+			$active_sites   = PMPRO_PL_Membership_Features::get_active_sites( $user_id, $hash );
+			if ( empty( $active_sites ) || ! in_array( $referrer, $active_sites, true ) ) {
 				// No active sites for this file, we're done.
 				return;
 			}
 
-			if ( in_array( $referrer, $active_sites[ $hash ], true ) ) {
+			if ( in_array( $referrer, $active_sites, true ) ) {
 				// Yes, this site is active. Remove it.
-				$active_sites[ $hash ] = array_diff( $active_sites[ $hash ], array( $referrer ) );
-				update_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', $active_sites );
+				$active_sites = array_diff( $active_sites, array( $referrer ) );
+				PMPRO_PL_Membership_Features::set_active_sites( $user_id, $hash, $active_sites );
 			}
 		}
 

@@ -36,12 +36,7 @@ function shortcode_pmpro_pl_sites( $atts, $content = null, $code = '' ) {
 	}
 
 	// Get the user's active sites for this hash.
-	$active_sites = get_user_meta( $user->ID, 'pmpro_plugin_licensing_active_sites', true );
-	if ( ! is_array( $active_sites ) ) {
-		$active_sites = array();
-	}
-
-	$sites_for_hash = isset( $active_sites[ $hash ] ) ? $active_sites[ $hash ] : array();
+	$active_sites = PMPRO_PL_Membership_Features::get_active_sites( $user->ID, $hash );
 
 	// Get the activation limit for this hash.
 	$attachment_id    = PMPRO_PL_Download_Links::find_attachment_id( $hash );
@@ -51,7 +46,7 @@ function shortcode_pmpro_pl_sites( $atts, $content = null, $code = '' ) {
 	}
 
 	// Check if user has reached the limit.
-	$current_count = count( $sites_for_hash );
+	$current_count = count( $active_sites );
 	$can_add_sites = ( 0 === $activation_limit ) || ( $current_count < $activation_limit ) || current_user_can( 'manage_options' );
 
 	$min = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
@@ -125,7 +120,7 @@ function shortcode_pmpro_pl_sites( $atts, $content = null, $code = '' ) {
 										</tr>
 									</thead>
 									<tbody>
-										<?php foreach ( $sites_for_hash as $index => $site_url ) : ?>
+										<?php foreach ( $active_sites as $site_url ) : ?>
 											<tr class="pmpro_pl_site_item" data-site-url="<?php echo esc_attr( $site_url ); ?>">
 												<td class="pmpro_pl_site_url">
 													<a href="<?php echo esc_url( $site_url ); ?>" target="_blank"><?php echo esc_html( $site_url ); ?></a>

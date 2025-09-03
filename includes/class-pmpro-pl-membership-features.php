@@ -162,7 +162,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			$activation_limit = (int) get_post_meta( $attachment_id, '_pmpro_pl_activation_limit', true );
 
 			// Get current active sites.
-			$active_sites = $this->get_active_sites( $user_id, $hash );
+			$active_sites = self::get_active_sites( $user_id, $hash );
 
 			// Check if user has reached the limit.
 			if ( ! current_user_can( 'manage_options' ) && $activation_limit > 0 && count( $active_sites ) >= $activation_limit ) {
@@ -171,7 +171,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 
 			// Add the site.
 			$active_sites[] = $site_url;
-			$this->set_active_sites( $user_id, $hash, $active_sites );
+			self::set_active_sites( $user_id, $hash, $active_sites );
 
 			wp_send_json_success();
 		}
@@ -198,7 +198,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			}
 
 			// Get current active sites.
-			$active_sites = $this->get_active_sites( $user_id, $hash );
+			$active_sites = self::get_active_sites( $user_id, $hash );
 
 			// Remove the site.
 			$key = array_search( $site_url, $active_sites, true );
@@ -209,7 +209,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			unset( $active_sites[ $key ] );
 			$active_sites = array_values( $active_sites ); // Re-index array.
 
-			$this->set_active_sites( $user_id, $hash, $active_sites );
+			self::set_active_sites( $user_id, $hash, $active_sites );
 			wp_send_json_success();
 		}
 
@@ -220,7 +220,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 		 * @param string $hash    File hash.
 		 * @return array
 		 */
-		public function get_active_sites( $user_id, $hash ) {
+		public static function get_active_sites( $user_id, $hash ) {
 			$active_sites = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
 			if ( ! is_array( $active_sites ) ) {
 				return array();
@@ -252,7 +252,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 		 * @param array  $sites   List of active site URLs.
 		 * @return void
 		 */
-		public function set_active_sites( $user_id, $hash, $sites ) {
+		public static function set_active_sites( $user_id, $hash, $sites ) {
 			$active_sites = get_user_meta( $user_id, 'pmpro_plugin_licensing_active_sites', true );
 			if ( ! is_array( $active_sites ) ) {
 				$active_sites = array();
@@ -298,7 +298,7 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 						$file = get_post( $attachment_id );
 
 						// How many sites is this license + file active on?
-						$active_sites_count = count( $this->get_active_sites( wp_get_current_user()->ID, $hash ) );
+						$active_sites_count = count( self::get_active_sites( wp_get_current_user()->ID, $hash ) );
 						$sites_link         = pmpro_url( 'account' ) . 'sites/?hash=' . $hash;
 						?>
 						<tr>
