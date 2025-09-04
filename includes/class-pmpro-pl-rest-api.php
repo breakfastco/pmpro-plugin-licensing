@@ -52,6 +52,21 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 					'show_in_rest'   => true,
 				)
 			);
+
+			/**
+			 * Needed to show users the version number of the file the moment
+			 * they upload or select it while editing a Membership level.
+			 */
+			register_meta(
+				'post',
+				'pmpro_pl_version',
+				array(
+					'object_subtype' => 'attachment',
+					'type'           => 'string',
+					'single'         => true,
+					'show_in_rest'   => true,
+				)
+			);
 		}
 
 		/**
