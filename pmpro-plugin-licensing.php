@@ -22,6 +22,12 @@ if ( ! defined( 'PMPRO_PLUGIN_LICENSING_VERSION' ) ) {
 if ( ! defined( 'PMPRO_PLUGIN_LICENSING_PATH' ) ) {
 	define( 'PMPRO_PLUGIN_LICENSING_PATH', __FILE__ );
 }
+if ( ! defined( 'PMPRO_PLUGIN_LICENSING_HASH' ) ) {
+	define( 'PMPRO_PLUGIN_LICENSING_HASH', '4254df8d9cb1d8a9ea8f60df47d3a8de' );
+}
+if ( ! defined( 'PMPRO_PLUGIN_LICENSING_STORE_URL' ) ) {
+	define( 'PMPRO_PLUGIN_LICENSING_STORE_URL', 'https://breakfastco.xyz' );
+}
 
 /**
  * Load dependencies. A library to parse plugin readme.txt files into HTML.
@@ -34,9 +40,10 @@ require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/vendor-prefixed/autoload
 // Load our updater so users see pending updates for this plugin.
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-updater.php';
 $updater = PMPRO_PL_Updater::get_instance();
-$updater->set_plugin_hash( '9c43f2e5857b1032374052dbfb8357b6' ); // Send this to the store instead of plugin_basename().
-$updater->set_store_url( 'https://breakfastco.test' ); // TODO change this back to the live store.
 $updater->add_hooks();
+
+// Load our activator so users can activate and deactivate license keys.
+require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-activator.php';
 
 // Manage this plugin's settings and provide UI controls.
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-settings.php';
