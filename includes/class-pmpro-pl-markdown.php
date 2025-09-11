@@ -1,10 +1,4 @@
 <?php
-//namespace WordPressdotorg\Plugin_Directory;
-
-// if ( ! class_exists( '\Michelf\MarkdownExtra' ) ) {
-// 	include __DIR__ . '/libs/michelf-php-markdown-1.6.0/Michelf/MarkdownExtra.inc.php';
-// }
-
 /**
  * WordPress.org Plugin Readme Parser Markdown.
  *
