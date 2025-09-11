@@ -458,7 +458,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 				<span class="pmpro_version">v<?php echo esc_html( PMPRO_PLUGIN_LICENSING_VERSION ); ?></span>
 				for&nbsp;Paid&nbsp;Memberships&nbsp;Pro
 				<div class="pmpro_meta">
-					<a href="https://breakfastco.xyz" target="_blank">Documentation</a>
+					<a href="https://breakfastco.xyz" target="_blank"><?php esc_html_e( 'Documentation', 'pmpro-plugin-licensing' ); ?></a>
 				</div>				
 			</div> <!-- end pmpro_banner_wrapper -->		
 		</div>
@@ -466,21 +466,30 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 		<form action="" method="post" enctype="multipart/form-data">
 			<?php wp_nonce_field( 'save_pl_settings', 'pmpro_pl_settings_nonce' ); ?>
 		<hr class="wp-header-end">
-		<h1>Settings</h1>
+		<h1><?php esc_html_e( 'Settings', 'pmpro-plugin-licensing' ); ?></h1>
 		<div id="" class="pmpro_section" data-visibility="shown" data-activated="true">
 			<div class="pmpro_section_toggle">
 				<button class="pmpro_section-toggle-button" type="button" aria-expanded="true">
 					<span class="dashicons dashicons-arrow-up-alt2"></span>
-					License Key
+					<?php esc_html_e( 'License Key', 'pmpro-plugin-licensing' ); ?>
 				</button>
 			</div>
 			<div class="pmpro_section_inside">
-				<p>Save the license key you purchased from <a href="https://breakfastco.xyz">Breakfast</a> for <b>Plugin Licensing for Paid Memberships Pro</b>.</p>
+				<p>
+				<?php
+				printf(
+					/* translators: 1. Opening anchor tag <a>. 2. Closing anchor tag </a>. */
+					esc_html__( 'Enter your license key and press the Save Changes button to activate this site. Only sites with a valid license key from %1$sBreakfast%2$s will receive updates.', 'pmpro-plugin-licensing' ),
+					'<a href="https://breakfastco.xyz">',
+					'</a>'
+				);
+				?>
+				</p>
 				<table class="form-table">
 				<tbody>                
 					<tr>
 						<th scope="row" valign="top">
-							<label for="pmpro_plugin_licensing_license_key">License Key</label>
+							<label for="pmpro_plugin_licensing_license_key"><?php esc_html_e( 'License Key', 'pmpro-plugin-licensing' ); ?></label>
 						</th>
 						<td>
 							<?php
