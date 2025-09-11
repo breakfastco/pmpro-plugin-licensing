@@ -355,6 +355,17 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			<?php
 		}
 
+		protected function obfuscate_license_key( $license_key ) {
+			if ( ! empty( $license_key ) ) {
+				return str_replace(
+					substr( $license_key, 0, 28 ),
+					str_repeat( '*', 28 ),
+					$license_key
+				);
+			}
+			return '';
+		}
+
 		/**
 		 * Register scripts and styles.
 		 *
@@ -393,12 +404,25 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 		}
 
 		/**
-		 * Save the settings.
+		 * Processes the license key depending on which button was pressed.
 		 *
 		 * @return void
 		 */
 		public function save_settings() {
 			$license_key = isset( $_POST['pmpro_plugin_licensing_license_key'] ) ? sanitize_text_field( $_POST['pmpro_plugin_licensing_license_key'] ) : '';
+
+			// Which button was pressed?
+			$submit = isset( $_POST['submit'] ) ? sanitize_text_field( wp_unslash( $_POST['submit'] ) ) : '';
+			if ( $submit === 'deactivate-license' ) {
+				PMPRO_PL_Activator::get_instance()->deactivate_license( $license_key );
+				return $license_key;
+			}
+
+			if ( $submit === 'delete-license-key' ) {
+				$license_key = '';
+			}
+
+			// User pressed Save Changes button.
 			update_option( pmpro_plugin_licensing_get_license_key_option_name(), $license_key );
 		}
 
@@ -407,7 +431,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 				wp_die( esc_html__( 'Paid Memberships Pro is not active.', 'pmpro-plugin-licensing' ) );
 			}
 			// Check nonce for saving settings.
-			if ( ! empty( $_POST['pmpro_plugin_licensing_save'] ) && ( empty( $_POST['pmpro_pl_settings_nonce'] ) || ! check_admin_referer( 'save_pl_settings', 'pmpro_pl_settings_nonce' ) ) ) {
+			if ( ! empty( $_POST['submit'] ) && ( empty( $_POST['pmpro_pl_settings_nonce'] ) || ! check_admin_referer( 'save_pl_settings', 'pmpro_pl_settings_nonce' ) ) ) {
 				wp_die( esc_html__( 'Please try again.', 'pmpro-plugin-licensing' ) );
 			}
 
@@ -417,7 +441,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			}
 
 			// Save settings if form is submitted.
-			if ( isset( $_POST['pmpro_plugin_licensing_save'] ) ) {
+			if ( isset( $_POST['submit'] ) ) {
 				$this->save_settings();
 			}
 
@@ -459,12 +483,64 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 							<label for="pmpro_plugin_licensing_license_key">License Key</label>
 						</th>
 						<td>
-							<input type="text" id="pmpro_plugin_licensing_license_key" name="pmpro_plugin_licensing_license_key" value="<?php echo esc_attr( $license_key ); ?>" class="regular-text">
+							<?php
+							// License key field(s).
+							// Does the user have an active license key?
+							$license_key    = pmpro_plugin_licensing_get_license_key();
+							$activator      = PMPRO_PL_Activator::get_instance();
+							$license_status = $activator->get_status( $license_key );
+
+							if ( empty( $license_key ) ){
+								// No. Show input field.
+								?>
+								<input type="text" id="pmpro_plugin_licensing_license_key" name="pmpro_plugin_licensing_license_key" value="<?php echo esc_attr( $license_key ); ?>" class="regular-text">
+								<?php
+							} else {
+								// Have a license. Show an obfuscated key and the license status.
+								// Stash the license key in a hidden field so it can be submitted.
+								printf(
+									'<input type="text" class="regular-text code" style="letter-spacing: 2px;" disabled="disabled" value="%s" />'
+									. ' <span class="license-status license-status-%s" title="%s">%s</span>'
+									. '<input type="hidden" name="pmpro_plugin_licensing_license_key" value="%s" />',
+									esc_html( $this->obfuscate_license_key( $license_key ) ),
+									esc_attr( $license_status ),
+									esc_attr( __( 'License Status', 'pmpro-plugin-licensing' ) ),
+									esc_html( ucwords( $license_status ?? '' ) ),
+									esc_html( $license_key )
+								);
+							}
+
+							// Is the license active? Show Deactivate button.
+							// If not active, show Delete License Key button. Could be expired.
+							echo '<div class="license-key-action-buttons"><p>';
+							if ( 'active' === $license_status ) {
+								// Show Deactivate button.
+								printf(
+									'<button type="submit" name="submit" value="deactivate-license" id="deactivate-license" class="button button-secondary">%s</button>',
+									esc_html__( 'Deactivate License', 'pmpro-plugin-licensing' )
+								);
+							} elseif ( ! empty( $license_key ) ) {
+								// Show Delete License Key button.
+								printf(
+									'<button type="submit" name="submit" value="delete-license-key" id="delete-license-key" class="button button-secondary">%s</button>',
+									esc_html__( 'Delete License Key', 'pmpro-plugin-licensing' )
+								);
+							}
+
+							if ( 'expired' === $license_status ) {
+								printf(
+									' &nbsp;<a href="%s">%s</a>',
+									esc_url( PMPRO_PL_Updater::get_store_url( PMPRO_PLUGIN_LICENSING_STORE_URL . '/membership-account/' ) ),
+									esc_html__( 'Renew', 'pmpro-plugin-licensing' )
+								);
+							}
+							echo '</p></div>';
+							?>
 						</td>
 					</tr>
 				</tbody>
 				</table>
-				<p class="submit"><input name="pmpro_plugin_licensing_save" type="submit" class="button-primary" value="Save All Settings"></p>
+				<p class="submit"><input name="submit" type="submit" class="button-primary" value="<?php esc_html_e( 'Save Changes', 'pmpro-plugin-licensing' ); ?>"></p>
 			</div> <!-- end pmpro_section_inside -->
 		</div> <!-- end pmpro_section -->
 	</form>
