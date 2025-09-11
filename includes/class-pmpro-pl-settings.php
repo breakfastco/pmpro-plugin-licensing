@@ -455,7 +455,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			<div class="pmpro_banner_wrapper">
 				<img class="pmpro-pl-icon" src="<?php echo esc_url( plugins_url( 'assets/icon.png', PMPRO_PLUGIN_LICENSING_PATH ) ); ?>" width="50" alt="" />
 				<h1>Plugin&nbsp;Licensing</h1>
-				<span class="pmpro_version">v0.1.1</span>
+				<span class="pmpro_version">v<?php echo esc_html( PMPRO_PLUGIN_LICENSING_VERSION ); ?></span>
 				for&nbsp;Paid&nbsp;Memberships&nbsp;Pro
 				<div class="pmpro_meta">
 					<a href="https://breakfastco.xyz" target="_blank">Documentation</a>
