@@ -38,6 +38,8 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			add_action( 'pmpro_after_change_membership_level', array( $this, 'after_membership_change_generate_license_key' ), 10, 3 );
 			// Display users' license keys to them on their account page.
 			add_action( 'pmpro_account_bullets_bottom', array( $this, 'show_users_their_license_key' ) );
+			// Display the user's license key on the Member Edit screen in admin.
+			add_action( 'pmpro_after_membership_level_profile_fields', array( $this, 'member_edit_show_license_key' ) );
 			// Display file downloads associated with membership levels on user account page.
 			add_action( 'pmpro_membership_account_after_level_card_content', array( $this, 'show_users_their_downloads' ), 10, 1 );
 			add_action( 'wp_enqueue_scripts', array( $this, 'membership_account_register_scripts' ) );
@@ -340,6 +342,45 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 					<button type="button" class="pmpro_btn" onclick="javascript:document.querySelector('#pmpro_pl_license_key').select();document.execCommand('copy');">Copy</button>
 				</div>
 			</li>
+			<?php
+		}
+
+		/**
+		 * Outputs the user's license key on the Member Edit screen (admin) beneath
+		 * the Membership Level profile fields, matching the form-table style used
+		 * by User Info and Member Notes above it.
+		 *
+		 * Hooked to: pmpro_after_membership_level_profile_fields
+		 *
+		 * @since 0.1.0
+		 * @param WP_User $user The user being edited.
+		 * @return void
+		 */
+		public function member_edit_show_license_key( $user ) {
+			if ( empty( $user ) || empty( $user->ID ) ) {
+				return;
+			}
+
+			$license_key = get_user_meta( $user->ID, 'pmpro_plugin_licensing_license_key', true );
+
+			// Heading and table to match surrounding admin UI.
+			?>
+			<h3><?php esc_html_e( 'Plugin Licensing', 'pmpro-plugin-licensing' ); ?></h3>
+			<table class="form-table">
+				<tr class="form-field">
+					<th scope="row"><label for="pmpro_pl_admin_license_key"><?php esc_html_e( 'License Key', 'pmpro-plugin-licensing' ); ?></label></th>
+					<td>
+						<?php if ( ! empty( $license_key ) ) { ?>
+							<div class="pmpro_pl_license_key_container">
+								<input type="text" readonly="readonly" id="pmpro_pl_admin_license_key" value="<?php echo esc_attr( $license_key ); ?>" />
+								<button type="button" class="button" onclick="(function(){var el=document.getElementById('pmpro_pl_admin_license_key');if(!el){return;}el.focus();el.select();try{document.execCommand('copy');}catch(e){}})();"><?php esc_html_e( 'Copy', 'pmpro-plugin-licensing' ); ?></button>
+							</div>
+						<?php } else { ?>
+							<em>&mdash; <?php esc_html_e( 'No license key generated yet.', 'pmpro-plugin-licensing' ); ?> &mdash;</em>
+						<?php } ?>
+					</td>
+				</tr>
+			</table>
 			<?php
 		}
 	}
