@@ -496,12 +496,12 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 						<td>
 							<?php
 							// License key field(s).
-							// Does the user have an active license key?
 							$license_key    = pmpro_plugin_licensing_get_license_key();
 							$activator      = PMPRO_PL_Activator::get_instance();
 							$license_status = $activator->get_status( $license_key );
 
-							if ( empty( $license_key ) ){
+							// Does the user have a license key?
+							if ( empty( $license_key ) ) {
 								// No. Show input field.
 								?>
 								<input type="text" id="pmpro_plugin_licensing_license_key" name="pmpro_plugin_licensing_license_key" value="<?php echo esc_attr( $license_key ); ?>" class="regular-text">
