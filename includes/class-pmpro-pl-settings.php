@@ -541,7 +541,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 							if ( 'expired' === $license_status ) {
 								printf(
 									' &nbsp;<a href="%s">%s</a>',
-									esc_url( PMPRO_PL_Updater::get_store_url( PMPRO_PLUGIN_LICENSING_STORE_URL . '/membership-account/' ) ),
+									esc_url( PMPRO_PL_Updater::get_store_url( '/membership-account/' ) ),
 									esc_html__( 'Renew', 'pmpro-plugin-licensing' )
 								);
 							}
