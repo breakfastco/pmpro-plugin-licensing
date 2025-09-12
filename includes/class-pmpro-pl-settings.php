@@ -415,7 +415,7 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			$submit = isset( $_POST['submit'] ) ? sanitize_text_field( wp_unslash( $_POST['submit'] ) ) : '';
 			if ( $submit === 'deactivate-license' ) {
 				PMPRO_PL_Activator::get_instance()->deactivate_license( $license_key );
-				return $license_key;
+				return;
 			}
 
 			if ( $submit === 'delete-license-key' ) {
@@ -423,6 +423,8 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			}
 
 			// User pressed Save Changes button.
+			$activator      = PMPRO_PL_Activator::get_instance();
+			$license_status = $activator->activate_license( $license_key );
 			update_option( pmpro_plugin_licensing_get_license_key_option_name(), $license_key );
 		}
 
