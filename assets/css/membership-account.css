@@ -12,4 +12,7 @@ table.pmpro-pl-downloads{
 }
 .pmpro_pl_license_key_container input {
 	border: none;
+	font-family: monospace;
+	height: 50px;
+	letter-spacing: 2px;
 }
