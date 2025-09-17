@@ -147,7 +147,7 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 			$response_data = $this->fetch_update_data();
 
 			// Is a new version available?
-			if ( ! empty( $response_data->new_version ) && version_compare( $response_data->new_version, PMPRO_PL_SAMPLE_PLUGIN_VERSION, '>' ) ) {
+			if ( ! empty( $response_data->new_version ) && version_compare( $response_data->new_version, PMPRO_PLUGIN_LICENSING_VERSION, '>' ) ) {
 				// Yes.
 				$obj = (object) array(
 					'icons'       => array(),
