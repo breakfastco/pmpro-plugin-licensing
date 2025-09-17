@@ -62,10 +62,15 @@ function shortcode_pmpro_pl_sites( $atts, $content = null, $code = '' ) {
 	wp_enqueue_script(
 		'pmpro-pl-sites',
 		plugins_url( "assets/js/sites{$min}.js", PMPRO_PLUGIN_LICENSING_PATH ),
-		array( 'jquery' ),
+		array( 'jquery', 'wp-i18n' ),
 		PMPRO_PLUGIN_LICENSING_VERSION,
 		true
 	);
+
+	// Make JS strings translatable.
+	if ( function_exists( 'wp_set_script_translations' ) ) {
+		wp_set_script_translations( 'pmpro-pl-sites', 'pmpro-plugin-licensing' );
+	}
 
 	// Pass data to the script via an inline JSON config variable.
 	$data = array(

@@ -383,10 +383,15 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			wp_register_script(
 				'pmpro-pl-settings',
 				plugins_url( "assets/js/settings{$min}.js", PMPRO_PLUGIN_LICENSING_PATH ),
-				array( 'wp-api', 'jquery' ),
+				array( 'wp-api', 'jquery', 'wp-i18n' ),
 				PMPRO_PLUGIN_LICENSING_VERSION,
 				true
 			);
+
+			// Make JS strings translatable.
+			if ( function_exists( 'wp_set_script_translations' ) ) {
+				wp_set_script_translations( 'pmpro-pl-settings', 'pmpro-plugin-licensing' );
+			}
 
 			wp_add_inline_script(
 				'pmpro-pl-settings',

@@ -5,6 +5,8 @@
  * @since 0.1.0
  */
 
+const { __, sprintf } = wp.i18n;
+
 (function($) {
 	'use strict';
 
@@ -41,26 +43,26 @@
 		const siteUrl = $('#new_site_url').val().trim();
 		
 		if (!siteUrl) {
-			showMessage('Please enter a valid site URL.', 'error');
+			showMessage( __( 'Please enter a valid site URL.', 'pmpro-plugin-licensing' ), 'error' );
 			return;
 		}
 
 		// Validate URL format.
 		if (!isValidUrl(siteUrl)) {
-			showMessage('Please enter a valid URL (e.g., https://example.com).', 'error');
+			showMessage( __( 'Please enter a valid URL (e.g., https://example.com).', 'pmpro-plugin-licensing' ), 'error' );
 			return;
 		}
 
 		// Check if we're at the limit.
 		if ( ! pmpro_pl_sites.can_manage_options && pmpro_pl_sites.limit > 0 && pmpro_pl_sites.current >= pmpro_pl_sites.limit) {
-			showMessage('You have reached the maximum number of active sites for this plugin.', 'error');
+			showMessage( __( 'You have reached the maximum number of active sites for this plugin.', 'pmpro-plugin-licensing' ), 'error' );
 			return;
 		}
 
 		// Show loading state.
 		const $button = $('.pmpro_btn-add-site');
 		const originalText = $button.text();
-		$button.prop('disabled', true).text('Adding...');
+		$button.prop('disabled', true).text( __( 'Adding...', 'pmpro-plugin-licensing' ) );
 
 		// Make AJAX request.
 		$.ajax({
@@ -92,13 +94,13 @@
 						hideAddSiteForm();
 					}
 					
-					showMessage('Site added successfully!', 'success');
+					showMessage( __( 'Site added successfully!', 'pmpro-plugin-licensing' ), 'success' );
 				} else {
-					showMessage(response.data.message || 'Failed to add site. Please try again.', 'error');
+					showMessage(response.data.message || __( 'Failed to add site. Please try again.', 'pmpro-plugin-licensing' ), 'error');
 				}
 			},
 			error: function() {
-				showMessage('An error occurred. Please try again.', 'error');
+				showMessage( __( 'An error occurred. Please try again.', 'pmpro-plugin-licensing' ), 'error' );
 			},
 			complete: function() {
 				$button.prop('disabled', false).text(originalText);
@@ -110,14 +112,14 @@
 	 * Remove a site from the user's license.
 	 */
 	function removeSite(siteUrl) {
-		if (!confirm('Are you sure you want to remove this site from your license?')) {
+		if (!confirm( __( 'Are you sure you want to remove this site from your license?', 'pmpro-plugin-licensing' ) )) {
 			return;
 		}
 
 		// Show loading state.
 		const $button = $(`.pmpro_btn-remove-site[data-site-url="${siteUrl}"]`);
 		const originalText = $button.text();
-		$button.prop('disabled', true).text('Removing...');
+		$button.prop('disabled', true).text( __( 'Removing...', 'pmpro-plugin-licensing' ) );
 
 		// Make AJAX request.
 		$.ajax({
@@ -144,13 +146,13 @@
 						showAddSiteForm();
 					}
 					
-					showMessage('Site removed successfully!', 'success');
+					showMessage( __( 'Site removed successfully!', 'pmpro-plugin-licensing' ), 'success' );
 				} else {
-					showMessage(response.data.message || 'Failed to remove site. Please try again.', 'error');
+					showMessage(response.data.message || __( 'Failed to remove site. Please try again.', 'pmpro-plugin-licensing' ), 'error');
 				}
 			},
 			error: function() {
-				showMessage('An error occurred. Please try again.', 'error');
+				showMessage( __( 'An error occurred. Please try again.', 'pmpro-plugin-licensing' ), 'error' );
 			},
 			complete: function() {
 				$button.prop('disabled', false).text(originalText);
@@ -179,7 +181,7 @@
 				</td>
 				<td>
 					<button type="button" class="pmpro_btn pmpro_btn-remove-site" data-site-url="${siteUrl}">
-						Remove
+						${ __( 'Remove', 'pmpro-plugin-licensing' ) }
 					</button>
 				</td>
 			</tr>
@@ -214,7 +216,7 @@
 	function updateSiteCount() {
 		const $countElement = $('.pmpro_pl_sites_count');
 		if ($countElement.length > 0 && pmpro_pl_sites.limit > 0) {
-			$countElement.text(`${pmpro_pl_sites.current} of ${pmpro_pl_sites.limit}`);
+			$countElement.text(`${pmpro_pl_sites.current} ${ __( 'of', 'pmpro-plugin-licensing' ) } ${pmpro_pl_sites.limit}`);
 		}
 	}
 
