@@ -237,7 +237,7 @@ if ( ! class_exists( 'PMPRO_PL_Updater' ) ) {
 		 * @return string
 		 */
 		protected function transient_key() {
-			return 'pmpro_pl_sample_plugin_update_response';
+			return 'pmpro_pl_plugin_licensing_update_response';
 		}
 	}
 }
