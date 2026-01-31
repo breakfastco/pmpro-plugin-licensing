@@ -37,6 +37,10 @@ if ( ! defined( 'PMPRO_PLUGIN_LICENSING_STORE_URL' ) ) {
  */
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/vendor-prefixed/autoload.php';
 
+// Load base classes for updater and activator.
+require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-updater-base.php';
+require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-activator-base.php';
+
 // Load our updater so users see pending updates for this plugin.
 require_once dirname( PMPRO_PLUGIN_LICENSING_PATH ) . '/includes/class-pmpro-pl-updater.php';
 $updater = PMPRO_PL_Updater::get_instance();

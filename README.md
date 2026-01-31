@@ -12,19 +12,12 @@ WordPress plugin. Add-on for Paid Memberships Pro. Sell WordPress plugins &amp; 
 - Files are stored at `wp-content/uploads/pmpro-plugin-licensing/`
 - Seamless updates in customer WordPress dashboards with core UI.
 
-### TODO License activation & update downloads
+### Testing & launch
 
-- [ ] Rewrite the updater based on the sample plugin updater, make it just usable by sample plugin
-
-### TODO File management
-
-- [ ] Replace button, Remove button, and Version aren't immediately shown after an upload
-
-### TODO misc housekeeping
-
+- [ ] Accept an update or two
 - [ ] Buy PMPro. Buy that membership with a customer account and find the .zip downloads and license key
-- [ ] Clone the settings page banner CSS so a PMPro redesign does not break my tab, this looks good https://www.linode.com/support/contact/
 - [ ] Fake a purchase
+- [X] settings.js and sites.js have non-translateable strings
 - [X] Put .zip files uploaded through our modal in a specific /uploads subfolder
 
 ## TODO Documentation in this README plus a web page
