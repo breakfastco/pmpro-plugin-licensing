@@ -8,6 +8,7 @@
  * GitHub Plugin URI: https://github.com/breakfastco/pmpro-plugin-licensing
  * Primary Branch: main
  * License: GPLv2
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: pmpro-plugin-licensing
  *
  * @author Corey Salzano <csalzano@duck.com>
