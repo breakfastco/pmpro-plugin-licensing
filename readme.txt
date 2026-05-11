@@ -4,7 +4,7 @@ Tags: paid memberships pro, pmpro, plugin sales
 Requires at least: 4.0
 Tested up to: 6.9
 Requires PHP: 7.2
-Stable tag: 1.0.78
+Stable tag: 1.0.79
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
  
@@ -79,6 +79,9 @@ Upload the new version as a new attachment and attach it to the same membership 
 
 == Changelog ==
 
+= 1.0.79 =
+* [Added] Adds plugin screenshots and expands the documentation with setup, operations, and REST API guidance.
+
 = 1.0.78 =
 * [Added] Adds an updater so this plugin can get updates from breakfastco.xyz.
 
@@ -87,6 +90,9 @@ Upload the new version as a new attachment and attach it to the same membership 
 
 
 == Upgrade Notice ==
+
+= 1.0.79 =
+This release adds screenshots and more complete documentation for setup, operations, and the client plugin REST API. No migration is required.
 
 = 1.0.77 =
 Sell WordPress plugins through Paid Memberships Pro with automatic license key generation and update delivery.
