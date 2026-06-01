@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Paid Memberships Pro - Plugin Licensing
  * Description: Attaches file downloads to Membership levels. Generates license keys for each order. Delivers updates.
- * Version: 1.0.79
+ * Version: 1.1.0
  * Author: Breakfast
  * Author URI: https://breakfastco.xyz
  * GitHub Plugin URI: https://github.com/breakfastco/pmpro-plugin-licensing
@@ -18,7 +18,7 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'PMPRO_PLUGIN_LICENSING_VERSION' ) ) {
-	define( 'PMPRO_PLUGIN_LICENSING_VERSION', '1.0.79' );
+	define( 'PMPRO_PLUGIN_LICENSING_VERSION', '1.1.0' );
 }
 if ( ! defined( 'PMPRO_PLUGIN_LICENSING_PATH' ) ) {
 	define( 'PMPRO_PLUGIN_LICENSING_PATH', __FILE__ );
