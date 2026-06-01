@@ -46,12 +46,13 @@ The companion sample client plugin lives here:
 
 ## Setup
 
-1. Install and activate Paid Memberships Pro.
-1. Install and activate this plugin.
-1. Edit a membership level and use **Add File** to upload or attach a plugin zip.
+1. Install and activate __Paid Memberships Pro__.
+1. Install and activate this plugin, __Plugin Licensing for Paid Memberships Pro__.
+1. Edit a membership level at __Memberships → Settings → Levels__.
+1. Find and expand the __Other Settings__ section.
+1. Use __Add File__ to upload or attach a plugin zip. Use the __Replace__ button to provide users with an updated version.
 1. Copy the generated file hash into the client plugin that should receive updates. Use the [sample plugin](https://github.com/breakfastco/pmpro-pl-sample-plugin) as a guide to integrate the updater into your plugin.
-1. Make sure the relevant membership levels belong to a **Level Group that allows multiple selections** if customers should be able to buy more than one plugin without losing access to previous purchases.
-1. Have customers enter their license key in the client plugin's settings screen.
+1. Instruct customers to enter their license key in the client plugin's settings screen. License keys are found on the PMPro __Membership Account__ page.
 
 ## Operational notes
 
