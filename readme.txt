@@ -51,7 +51,7 @@ When customers purchase a membership level that includes a plugin download, they
  
 = What is Paid Memberships Pro? =
 
-Paid Memberships Pro is a WordPress membership plugin that allows you to create membership levels, restrict content, and accept payments. This add-on extends PMPro to sell and distribute WordPress plugins.
+Paid Memberships Pro is a WordPress membership plugin that allows you to create membership levels, restrict content, and accept payments. This add-on extends PMPro to sell and update WordPress plugins.
 
 = How do license keys work? =
 
@@ -59,15 +59,15 @@ Each customer receives one license key when they make their first purchase. This
 
 = How do automatic updates work? =
 
-Customers enter their license key in their WordPress dashboard. The plugin connects to your store via REST API to check for updates. When updates are available, they appear in the WordPress Updates screen just like plugins from WordPress.org.
+Customers enter their license key in their WordPress dashboard. The plugin connects to your store via REST API to check for updates. When updates are available, they appear in the WordPress Updates screen just like other plugins.
 
 = Can I limit how many sites a customer can activate? =
 
-Yes. When attaching a plugin file to a membership level, you can set an activation limit. Customers can manage their active sites from the membership-account/sites/ page.
+Yes. When managing files in a Membership Level, you can enter an activation limit. Customers can manage their active sites from the membership-account/sites/ page.
 
 = What happens if a customer cancels their membership? =
 
-Their license key becomes inactive, and they will no longer receive updates. However, they can continue using the plugin files they have already downloaded.
+Their license key becomes inactive, and they will no longer receive updates. However, they can continue using the plugin files they have already downloaded unless your plugin is customized to perform license checks and gate features.
 
 = Can customers purchase multiple plugins? =
 
@@ -75,7 +75,7 @@ Yes. Make sure the membership levels are part of a Level Group that allows multi
 
 = How do I add a new version of a plugin? =
 
-Upload the new version as a new attachment and attach it to the same membership level. The plugin will automatically deliver the update to customers with valid licenses.
+Edit the Membership Level, expand Other Settings, find the file in the table, and press the Replace button. Choose or upload the new version of the plugin. Save the Membership Level.
 
 == Changelog ==
 
