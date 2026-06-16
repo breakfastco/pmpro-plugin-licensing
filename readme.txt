@@ -4,7 +4,7 @@ Tags: paid memberships pro, pmpro, plugin sales
 Requires at least: 4.0
 Tested up to: 6.9
 Requires PHP: 7.2
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
  
@@ -78,6 +78,9 @@ Yes. Make sure the membership levels are part of a Level Group that allows multi
 Edit the Membership Level, expand Other Settings, find the file in the table, and press the Replace button. Choose or upload the new version of the plugin. Save the Membership Level.
 
 == Changelog ==
+
+= 1.1.1 =
+* [Fixed] Adds a REST endpoint to deliver the updated file payload to the WordPress updater remote requests.
 
 = 1.1.0 =
 * [Added] Adds plugin screenshots and expands the documentation with setup.
