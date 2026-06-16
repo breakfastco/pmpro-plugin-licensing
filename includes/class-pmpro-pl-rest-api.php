@@ -207,17 +207,6 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				);
 			}
 
-			// Get the latest version info from attachment meta.
-			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
-			if ( 0 === $attachment_id ) {
-				// Sorry, invalid file.
-				return new WP_Error(
-					'rest_forbidden',
-					__( 'Request failed, invalid file.' ),
-					array( 'status' => 401 )
-				);
-			}
-
 			// Get the referring URL from the request.
 			$referrer = $params['site'];
 			if ( empty( $referrer ) ) {
@@ -229,31 +218,30 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				);
 			}
 
+			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
+			if ( 0 === $attachment_id ) {
+				// Sorry, invalid file.
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid file.' ),
+					array( 'status' => 401 )
+				);
+			}
+
 			/**
 			 * Only paying customers with license keys get updates, but anyone
 			 * can request the file to get the latest version info. The
 			 * 'package' download URL will be missing for those who do not have
-			 * access to the new file. The package URL is predictable anyways!
+			 * access to the new file.
 			 */
 			$include_package = false;
+			$license           = $params['license'] ?? '';
 
 			// Was a license key provided?
-			if ( ! empty( $params['license'] ) ) {
-				// Yes.
-				// Is the license key associated with a user?
-				$user_id = pmpro_pl_get_user_id_from_license_key( $params['license'] );
-				if ( ! empty( $user_id ) ) {
-					// Yes.
-					$license_check_args = array(
-						'license_key'   => $params['license'],
-						'attachment_id' => $attachment_id,
-						'user_id'       => $user_id,
-					);
-					// Is the license valid and the site is already active or just activated?
-					if ( pmpro_pl_customer_license_is_valid( $license_check_args ) && $this->maybe_add_active_site( $hash, $referrer, $user_id ) ) {
-						// Yes.
-						$include_package = true;
-					}
+			if ( ! empty( $license ) ) {
+				$licensed_attachment_id = $this->get_licensed_attachment_id( $hash, $license, $referrer );
+				if ( ! is_wp_error( $licensed_attachment_id ) ) {
+					$include_package = true;
 				}
 			}
 
@@ -283,10 +271,142 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 			);
 
 			if ( $include_package ) {
-				$result['package'] = PMPRO_PL_Download_Links::create_download_link( $hash );
+				$result['package'] = PMPRO_PL_Download_Links::create_update_download_link( $hash, $license, $referrer );
 			}
 
 			return $result;
+		}
+
+		/**
+		 * Handles REST requests to download plugin zip files.
+		 *
+		 * @param  WP_REST_Request $request The request object.
+		 * @return WP_REST_Response|WP_Error
+		 */
+		public function file_download_handler( $request ) {
+			$params   = $request->get_params();
+			$hash     = $params['file'];
+			$license  = $params['license'];
+			$referrer = $params['site'];
+
+			$attachment_id = $this->get_licensed_attachment_id( $hash, $license, $referrer );
+			if ( is_wp_error( $attachment_id ) ) {
+				return $attachment_id;
+			}
+
+			$request->set_param( '_pmpro_pl_attachment_id', $attachment_id );
+			add_filter( 'rest_pre_serve_request', array( $this, 'serve_file_download' ), 10, 4 );
+
+			return new WP_REST_Response( null, 200 );
+		}
+
+		/**
+		 * Streams a plugin zip file for a REST download request.
+		 *
+		 * @param  bool             $served  Whether the request has already been served.
+		 * @param  WP_REST_Response $result  Result to send to the client.
+		 * @param  WP_REST_Request  $request Request used to generate the response.
+		 * @param  WP_REST_Server   $server  Server instance.
+		 * @return bool
+		 */
+		public function serve_file_download( $served, $result, $request, $server ) {
+			unset( $server );
+
+			if ( $served || ! $request instanceof WP_REST_Request ) {
+				return $served;
+			}
+
+			if ( ! preg_match( '#/pmpro/v1/files/[^/]+/download/?$#', $request->get_route() ) ) {
+				return $served;
+			}
+
+			$attachment_id = (int) $request->get_param( '_pmpro_pl_attachment_id' );
+			if ( empty( $attachment_id ) ) {
+				return $served;
+			}
+
+			if ( PMPRO_PL_Download_Links::stream_attachment( $attachment_id, true ) ) {
+				remove_filter( 'rest_pre_serve_request', array( $this, 'serve_file_download' ), 10 );
+				return true;
+			}
+
+			remove_filter( 'rest_pre_serve_request', array( $this, 'serve_file_download' ), 10 );
+			return $served;
+		}
+
+		/**
+		 * Validates a licensed download request and returns the attachment ID.
+		 *
+		 * @param  string $hash     The file hash.
+		 * @param  string $license  The license key.
+		 * @param  string $referrer The requesting site URL.
+		 * @return int|WP_Error Attachment ID on success.
+		 */
+		protected function get_licensed_attachment_id( $hash, $license, $referrer ) {
+			if ( empty( $hash ) ) {
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid file.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
+			if ( 0 === $attachment_id ) {
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid file.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			if ( empty( $referrer ) ) {
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid referrer.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			if ( empty( $license ) ) {
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid license.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			$user_id = pmpro_pl_get_user_id_from_license_key( $license );
+			if ( empty( $user_id ) ) {
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, invalid license.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			$license_check_args = array(
+				'license_key'   => $license,
+				'attachment_id' => $attachment_id,
+				'user_id'       => $user_id,
+			);
+			if ( ! pmpro_pl_customer_license_is_valid( $license_check_args ) ) {
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, license validation failed.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			if ( ! $this->maybe_add_active_site( $hash, $referrer, $user_id ) ) {
+				return new WP_Error(
+					'rest_forbidden',
+					__( 'Request failed, activation limit reached.' ),
+					array( 'status' => 401 )
+				);
+			}
+
+			return $attachment_id;
 		}
 
 		public function get_license_status( $request ) {
@@ -426,6 +546,32 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		 */
 		public function register_routes() {
 			$rest_namespace = 'pmpro/v1';
+			/**
+			 * Route to download plugin zip files for automatic updates.
+			 * Example: https://example.com/wp-json/pmpro/v1/files/xxx/download?license=yyy&site=zzz
+			 */
+			register_rest_route(
+				$rest_namespace,
+				'/files/(?P<file>[a-fA-F0-9]{32})/download',
+				array(
+					array(
+						'methods'  => WP_REST_Server::READABLE, // GET.
+						'callback' => array( $this, 'file_download_handler' ),
+						'args'     => array(
+							'file'    => array(
+								'required' => true,
+							),
+							'license' => array(
+								'required' => true,
+							),
+							'site'    => array(
+								'required' => true,
+							),
+						),
+					),
+				)
+			);
+
 			/**
 			 * Route to check for updates.
 			 * Example: https://example.com/wp-json/pmpro/v1/files/xxx/?license=yyy&site=zzz

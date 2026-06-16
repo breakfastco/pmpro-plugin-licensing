@@ -70,6 +70,64 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 		}
 
 		/**
+		 * Creates a REST download URL for automatic plugin updates.
+		 *
+		 * Used by client sites during wp-admin updates. Unlike
+		 * create_download_link(), this URL accepts license and site query args
+		 * so server-to-server requests can authenticate without a store login.
+		 *
+		 * @param  string $hash    The file hash.
+		 * @param  string $license The customer's license key.
+		 * @param  string $site    The requesting site URL.
+		 * @return string
+		 */
+		public static function create_update_download_link( $hash, $license, $site ) {
+			if ( empty( $hash ) || empty( $license ) || empty( $site ) ) {
+				return '';
+			}
+
+			return add_query_arg(
+				array(
+					'license' => $license,
+					'site'    => $site,
+				),
+				rest_url( 'pmpro/v1/files/' . rawurlencode( $hash ) . '/download' )
+			);
+		}
+
+		/**
+		 * Streams an attachment file to the browser.
+		 *
+		 * @param  int  $attachment_id Attachment post ID.
+		 * @param  bool $attachment    When true, send Content-Disposition: attachment.
+		 * @return bool True when the file was streamed, false otherwise.
+		 */
+		public static function stream_attachment( $attachment_id, $attachment = true ) {
+			$file_path = get_attached_file( $attachment_id );
+			if ( empty( $file_path ) || ! file_exists( $file_path ) ) {
+				return false;
+			}
+
+			$file_name = basename( $file_path );
+			$post      = get_post( $attachment_id );
+			$mime_type = ( $post && ! empty( $post->post_mime_type ) ) ? $post->post_mime_type : 'application/zip';
+			$disposition = $attachment ? 'attachment' : 'inline';
+
+			if ( ! headers_sent() ) {
+				status_header( 200 );
+				header( 'Content-Type: ' . $mime_type );
+				header( 'Content-Disposition: ' . $disposition . '; filename="' . $file_name . '"' );
+				header( 'Expires: 0' );
+				header( 'Cache-Control: must-revalidate' );
+				header( 'Pragma: public' );
+				header( 'Content-Length: ' . filesize( $file_path ) );
+			}
+
+			readfile( $file_path );
+			return true;
+		}
+
+		/**
 		 * Finds a file's attachment post ID given its hash or zero.
 		 *
 		 * @param  string $hash
@@ -153,14 +211,7 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 			}
 
 			// Write the file to the response so the user gets a download.
-			$post = get_post( $attachment_id );
-			header( 'Content-Type: ' . $post->post_mime_type );
-			header( 'Content-Disposition: inline; filename="' . $file_name . '"' );
-			header( 'Expires: 0' );
-			header( 'Cache-Control: must-revalidate' );
-			header( 'Pragma: public' );
-			header( 'Content-Length: ' . filesize( $file_path ) );
-			readfile( $file_path );
+			self::stream_attachment( $attachment_id, false );
 			exit;
 		}
 	}

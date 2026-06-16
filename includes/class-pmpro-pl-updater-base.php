@@ -79,8 +79,9 @@ if ( ! class_exists( 'PMPRO_PL_Updater_Base' ) ) {
 				'changelog'    => $update_response->sections->changelog ?? '',
 			);
 			if ( ! empty( $update_response->package ) ) {
-				$api->download_link = $update_response->package;
-				$api->package       = $update_response->package;
+				$package_url          = $this->resolve_package_url( $update_response->package );
+				$api->download_link = $package_url;
+				$api->package       = $package_url;
 			}
 			if ( empty( $api->upgrade_notice ) && empty( $this->get_license_key() ) ) {
 				// phpcs:ignore WordPress.WP.I18n.NonSingularStringLiteralDomain
@@ -120,7 +121,7 @@ if ( ! class_exists( 'PMPRO_PL_Updater_Base' ) ) {
 				);
 
 				if ( ! empty( $response_data->package ) ) {
-					$obj->package = $response_data->package;
+					$obj->package = $this->resolve_package_url( $response_data->package );
 				}
 
 				$transient->response[ $plugin_slug ] = $obj;
@@ -195,6 +196,45 @@ if ( ! class_exists( 'PMPRO_PL_Updater_Base' ) ) {
 				return add_query_arg( $params, $url );
 			}
 			return $url;
+		}
+
+		/**
+		 * Ensures the package URL can be fetched by WordPress during updates.
+		 *
+		 * Stores may return a REST download URL directly. Older stores and
+		 * cached update responses may still return membership-account download
+		 * links that require a logged-in browser session on the store.
+		 *
+		 * @param  string $package_url The package URL from the store response.
+		 * @return string
+		 */
+		protected function resolve_package_url( $package_url ) {
+			if ( empty( $package_url ) ) {
+				return '';
+			}
+
+			if ( false !== strpos( $package_url, '/wp-json/pmpro/v1/files/' )
+				&& false !== strpos( $package_url, '/download' ) ) {
+				return $package_url;
+			}
+
+			if ( preg_match( '#/membership-account/download/([a-fA-F0-9]{32})/?$#', $package_url, $matches ) ) {
+				$license_key = $this->get_license_key();
+				if ( empty( $license_key ) ) {
+					return $package_url;
+				}
+
+				return self::build_store_url(
+					$this->get_store_url_constant(),
+					'/wp-json/pmpro/v1/files/' . $matches[1] . '/download',
+					array(
+						'license' => $license_key,
+						'site'    => site_url(),
+					)
+				);
+			}
+
+			return $package_url;
 		}
 
 		/**

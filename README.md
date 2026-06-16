@@ -97,7 +97,8 @@ If you want a client plugin to gate features locally, that logic must live in th
 
 Client plugins typically use these endpoints:
 
-- `GET /wp-json/pmpro/v1/files/<hash>?site=<url>&license=<key>`
+- `GET /wp-json/pmpro/v1/files/<hash>?site=<url>&license=<key>` — update metadata
+- `GET /wp-json/pmpro/v1/files/<hash>/download?site=<url>&license=<key>` — plugin zip download for automatic updates
 - `POST /wp-json/pmpro/v1/activate`
 - `POST /wp-json/pmpro/v1/deactivate`
 - `GET /wp-json/pmpro/v1/status?file=<hash>&license=<key>&site=<url>`
