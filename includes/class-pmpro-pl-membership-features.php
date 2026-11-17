@@ -36,6 +36,8 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 			add_action( 'pmpro_after_checkout', array( $this, 'after_checkout_generate_license_key' ), 10, 2 );
 			// Generate license keys when users are manually assigned to memberships.
 			add_action( 'pmpro_after_change_membership_level', array( $this, 'after_membership_change_generate_license_key' ), 10, 3 );
+			// Add Member creates the account before a level is chosen.
+			add_action( 'user_register', array( $this, 'after_user_register_generate_license_key' ) );
 			// Display users' license keys to them on their account page.
 			add_action( 'pmpro_account_bullets_bottom', array( $this, 'show_users_their_license_key' ) );
 			// Display the user's license key on the Member Edit screen in admin.
@@ -121,6 +123,20 @@ if ( ! class_exists( 'PMPRO_PL_Membership_Features' ) ) {
 				return;
 			}
 			$this->maybe_generate_license_key_for_user( $user_id, $level_id );
+		}
+
+		/**
+		 * Generate a license key as soon as the account exists.
+		 *
+		 * Paid Memberships Pro's Add Member screen inserts the user, then redirects
+		 * to the memberships panel. Credit packs have no downloadable files, so the
+		 * membership-change hook above never mints a key for them.
+		 *
+		 * @param int $user_id New user ID.
+		 * @return void
+		 */
+		public function after_user_register_generate_license_key( $user_id ) {
+			$this->maybe_generate_license_key_for_user( (int) $user_id, 'user_register' );
 		}
 
 		/**
