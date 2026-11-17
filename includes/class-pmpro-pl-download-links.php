@@ -166,6 +166,29 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 		}
 
 		/**
+		 * Whether a hash is already stored on any Membership Level.
+		 *
+		 * A hash whose file has not been attached yet is still in use.
+		 * find_attachment_id() returns 0 in that case.
+		 *
+		 * @param  string $hash File hash.
+		 * @return bool
+		 */
+		public static function hash_is_used( $hash ) {
+			if ( '' === $hash || ! function_exists( 'pmpro_getAllLevels' ) ) {
+				return false;
+			}
+			$levels = pmpro_getAllLevels( true );
+			foreach ( $levels as $level ) {
+				$level_meta_files = get_pmpro_membership_level_meta( (int) $level->id, 'plugin_licensing_files', true );
+				if ( is_array( $level_meta_files ) && array_key_exists( $hash, $level_meta_files ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/**
 		 * Finds a file's attachment post ID given its hash or zero.
 		 *
 		 * @param  string $hash

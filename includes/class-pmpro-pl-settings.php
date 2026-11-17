@@ -62,14 +62,16 @@ if ( ! class_exists( 'PMPRO_PL_Settings' ) ) {
 			}
 
 			/**
-			 * Generate an md5 hash checksum and make sure it has not yet been
-			 * used by another file.
+			 * Each Add File click sends the same request body, so hashing that
+			 * body handed every new row the same hash until one was saved.
+			 * Both rows then shared an element id, and choosing a file for the
+			 * second row overwrote the first. Draw a new hash every time.
+			 * find_attachment_id() returns 0 when a hash is saved with no file
+			 * yet, so an empty attachment id still counts as in use.
 			 */
-			$salt_string = 'pmpro_pl_hash_salt_';
-			$hash        = md5( $salt_string . wp_json_encode( $_POST ) );
-			while ( ! empty( PMPRO_PL_Download_Links::find_attachment_id( $hash ) ) ) {
-				$hash = md5( $salt_string . uniqid() );
-			}
+			do {
+				$hash = md5( uniqid( (string) wp_rand(), true ) );
+			} while ( PMPRO_PL_Download_Links::hash_is_used( $hash ) );
 			wp_send_json_success( array( 'hash' => $hash ) );
 		}
 
