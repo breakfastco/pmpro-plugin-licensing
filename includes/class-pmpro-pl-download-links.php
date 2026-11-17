@@ -96,6 +96,44 @@ if ( ! class_exists( 'PMPRO_PL_Download_Links' ) ) {
 		}
 
 		/**
+		 * Creates a REST download URL for a file that needs no license key.
+		 *
+		 * @param  string $hash The file hash.
+		 * @return string
+		 */
+		public static function create_free_update_download_link( $hash ) {
+			if ( empty( $hash ) ) {
+				return '';
+			}
+
+			return rest_url( 'pmpro/v1/files/' . rawurlencode( $hash ) . '/download' );
+		}
+
+		/**
+		 * Whether a file is attached to a free Membership Level. Files in free
+		 * levels are delivered to updaters without a license key.
+		 *
+		 * @param  string $hash The file hash.
+		 * @return bool
+		 */
+		public static function file_is_free( $hash ) {
+			if ( empty( $hash ) || ! function_exists( 'pmpro_getAllLevels' ) || ! function_exists( 'pmpro_isLevelFree' ) ) {
+				return false;
+			}
+			$levels = pmpro_getAllLevels( true );
+			foreach ( $levels as $level ) {
+				$level_meta_files = get_pmpro_membership_level_meta( (int) $level->id, 'plugin_licensing_files', true );
+				if ( empty( $level_meta_files ) || ! isset( $level_meta_files[ $hash ] ) ) {
+					continue;
+				}
+				if ( pmpro_isLevelFree( $level ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/**
 		 * Streams an attachment file to the browser.
 		 *
 		 * @param  int  $attachment_id Attachment post ID.

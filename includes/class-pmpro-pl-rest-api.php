@@ -207,9 +207,12 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 				);
 			}
 
+			// Files in free Membership Levels need no license key or site.
+			$is_free = PMPRO_PL_Download_Links::file_is_free( $hash );
+
 			// Get the referring URL from the request.
-			$referrer = $params['site'];
-			if ( empty( $referrer ) ) {
+			$referrer = $params['site'] ?? '';
+			if ( empty( $referrer ) && ! $is_free ) {
 				// No referrer.
 				return new WP_Error(
 					'rest_forbidden',
@@ -272,6 +275,8 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 
 			if ( $include_package ) {
 				$result['package'] = PMPRO_PL_Download_Links::create_update_download_link( $hash, $license, $referrer );
+			} elseif ( $is_free ) {
+				$result['package'] = PMPRO_PL_Download_Links::create_free_update_download_link( $hash );
 			}
 
 			return $result;
@@ -286,12 +291,24 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 		public function file_download_handler( $request ) {
 			$params   = $request->get_params();
 			$hash     = $params['file'];
-			$license  = $params['license'];
-			$referrer = $params['site'];
+			$license  = $params['license'] ?? '';
+			$referrer = $params['site'] ?? '';
 
-			$attachment_id = $this->get_licensed_attachment_id( $hash, $license, $referrer );
-			if ( is_wp_error( $attachment_id ) ) {
-				return $attachment_id;
+			if ( PMPRO_PL_Download_Links::file_is_free( $hash ) ) {
+				// Files in free Membership Levels need no license key or site.
+				$attachment_id = PMPRO_PL_Download_Links::find_attachment_id( $hash );
+				if ( 0 === $attachment_id ) {
+					return new WP_Error(
+						'rest_forbidden',
+						__( 'Request failed, invalid file.' ),
+						array( 'status' => 401 )
+					);
+				}
+			} else {
+				$attachment_id = $this->get_licensed_attachment_id( $hash, $license, $referrer );
+				if ( is_wp_error( $attachment_id ) ) {
+					return $attachment_id;
+				}
 			}
 
 			$request->set_param( '_pmpro_pl_attachment_id', $attachment_id );
@@ -561,11 +578,12 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 							'file'    => array(
 								'required' => true,
 							),
+							// License and site are checked in the callback. Free files need neither.
 							'license' => array(
-								'required' => true,
+								'required' => false,
 							),
 							'site'    => array(
-								'required' => true,
+								'required' => false,
 							),
 						),
 					),
@@ -587,8 +605,9 @@ if ( ! class_exists( 'PMPRO_PL_REST_API' ) ) {
 							'file' => array(
 								'required' => true,
 							),
+							// Checked in the callback. Free files need no site.
 							'site' => array(
-								'required' => true,
+								'required' => false,
 							),
 						),
 					),
