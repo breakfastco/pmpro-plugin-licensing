@@ -2,7 +2,7 @@
 Contributors: salzano
 Tags: paid memberships pro, pmpro, plugin sales
 Requires at least: 4.0
-Tested up to: 6.9
+Tested up to: 7.1.4
 Requires PHP: 7.2
 Stable tag: 1.1.2
 License: GPLv2 or later
@@ -83,6 +83,7 @@ Edit the Membership Level, expand Other Settings, find the file in the table, an
 * [Fixed] Attaching a second plugin file while editing a membership level no longer replaces the file in the first row.
 * [Fixed] Files on a free membership level are delivered to the updater without a license key or site.
 * [Fixed] A license key is created as soon as a user account exists, so Add Member and credit packs still get one.
+* [Changed] Changes tested up to version to 7.1.4.
 
 = 1.1.1 =
 * [Fixed] Adds a REST endpoint to deliver the updated file payload to the WordPress updater remote requests.
@@ -99,6 +100,9 @@ Edit the Membership Level, expand Other Settings, find the file in the table, an
 
 
 == Upgrade Notice ==
+
+= 1.1.2 =
+Attaching a second plugin file to a membership level no longer replaces the file in the first row. Files on a free level are delivered to the updater without a license key or site. A license key is created as soon as a user account exists, so Add Member and credit packs still get one.
 
 = 1.1.0 =
 This release adds screenshots and more complete documentation for setup, operations, and the client plugin REST API.
